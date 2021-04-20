@@ -1,0 +1,2742 @@
+三、Vue后台管理项目
+  1.准备
+    a.项目功能演示
+      登录
+      首页
+        用户管理
+          用户列表
+        权限管理
+          角色列表
+          权限列表
+        商品管理
+          商品列表
+          分类参数
+          商品分类
+        订单管理
+          订单列表
+        数据统计
+          数据报表
+      项目->后台管理系统->数据来源于mysql数据库(.sql)-
+      后台:node写好的后台
+    b.项目准备素材说明
+      ①.准备数据库:
+        打开navicat.exe -> 连接localhost -> 新建连接数据库shopmanager，字符集utf-8 -> 打开itcast连接 -> 运行SQL文件 -> 导入itcast.sql文件
+      ②.启动后台服务器:
+        api-server -> 解压 -> 根据自己的数据库配置信息修改(修改config/default.json文件的db_config对象里面的内容，即配置数据库信息) -> 启动node后台服务 -> node app.js -> 启动服务器
+      ③.接口文档:
+         docs/index.html->打开->将来发送请求->看接口文档
+      补充: vue项目 200个左右接口数量 .vue组件文件30-40个
+    c.批处理
+      以下几个cmd: .
+        启动后台 -> node app.js
+        git -> git status ...
+        安装包 -> npm i ...
+        vuecli -> npm run dev 
+        等
+      为了提高测试效果
+        api-server -> 新建run.txt(意思是在此路径下要启动的指令) -> 在run.txt中写node app.js(不要加回车) -> 保存 -> 改后缀.txt -> 改为.bat -> 双击运行run.bat文件 -> 自动开启cmd并且指令
+    d.vue-cli创建项目结构
+      ①.来到项目所在的目录->打开cmd
+      ②.vue init webpack 项目名  (项目名不能是关键字)
+          Project name (shopmanager)   回车
+          Project description (A Vue.js project)  回车
+          Author (mile <791144831@qq.com>) 回车 
+          Vue build (Use arrow keys)  选上面的
+            for most users
+          Install vue-router? (Y/n)  Y
+            是否使用路由 -> Y
+          Use ESLint to lint your code? (Y/n)  Y
+            是否使用ESLint(检查代码规范) -> Y
+          Standard (https://github.com/standard/standard) 选第一个
+            结尾不加";"
+          Set up unit tests (Y/n) n
+            是否设置单元测试
+          Setup e2e tests with Nightwatch? (Y/n) n
+            是否设置端到端测试
+          Yes, use NPM 选第一个
+      ③.cd 项目名
+      ④.npm run dev(默认不会打开浏览器)  <- 启动开发模式
+      注意：手动打开浏览器地址：http://127.0.0.1:8080，其中的端口可以在项目文件中的config文件夹中的index.js中的dev的port对应的值修改端口。
+    e.项目目录说明
+      build   webpack打包相关配置文件目录(webpack打包的产物/结果)
+        build.js  ebpack工具：(main.js/router.js/...)build.js文件其实是自己写的所有js代码的一个集
+      config  webpack打包相关配置文件目录
+        index.js 修改autoOpenBrowser为true，自动打开浏览器 -> npm run dev
+      docs  我们自己添加的文档目录
+        开发文档.md  案例开发步骤文档
+        接口文档.md  后台 API 接口文档
+      node_modules  第三方包
+      src  项目源码
+        assets  存储资源，例如 css、img、fonts
+        components  存储所有公共组件
+        router  路由
+          index.js  路由配置文件
+        App.vue  单页面应用程序的根组件
+        main.js  开机键，负责把根组件替换到根节点
+      static  可以放一些静态资源
+        .gitkeep  (git无法管理空文件夹，使用.gitkeep即可管理空文件夹)没啥用，用来充当一个文件就可以提交我们的 static 目录，未来有了其它文件可以把它删掉
+      .babelrc  es6转es5配置文件，给 babel 编译器用的
+      .editorconfig  给编辑器看的(编译器配置文件)
+      .eslintignore  (eslint排除忽略文件)给eslint代码风格校验工具使用的，用来配置忽略代码风格校验的文件或是目录
+      .eslintrc.js  (eslint配置规则文件)给eslint代码风格校验工具使用的，用来配置代码风格校验规则
+      .gitignore  给git使用的，用来配置忽略上传的文件
+      .postcssrc.js  js处理样式文件(给postcss用的，postcss类似于 less、sass 预处理器)
+      index.html  单页面应用程序的单页-> 注意: 不需要引入build.js
+      package-lock.json  锁定第三方包的版本，以及保存包的下载地址
+      package.json  项目说明，用来保存依赖项等信息
+      REAMDE.md  项目说明文档
+    f.代码规范-自定义指令-lintfix
+      ESLint 自动检测js代码的规范 
+        ①. 结尾没有;
+        ②. 必须===
+        ③. 单引号
+        ④. 不能有未使用变量
+        ⑤. 缩进
+        ⑥. 不能有多余空行
+        ⑦. 等
+      设置自动检测：
+        在package.json中 -> scripts(自定义指令) -> "lint"后面添加 -> "lintfix": "eslint --ext .js,.vue src --fix", -> 重新启动服务器npm run dev -> 报错 -> 暂停服务器 -> npm run lintfix -> npm run dev(启动开发模式)
+      注意：所有自定义指令启动都是npm run 自定义指令，其中未使用的变量不会修复的。
+    g.使用element-ui网站快速成型工具
+      ①.文档分析
+        文档：https://element.eleme.cn/#/zh-CN
+        饿了么web开发团队 vue UI库Element
+        ElementUI 适用于vue2+项目并且PC端项目
+        扩展: vue移动端web -> Mint-ui
+        PC端UI库:   iView
+      ②.安装
+        npm i element-ui -S
+      ③.引入
+        在main.js中引入vue的后面引入如下代码：
+            mport ElementUI from 'element-ui'
+            import 'element-ui/lib/theme-chalk/index.css'
+      ④.使用
+        在main.js中引入router的后面使用如下代码：
+            // Vue插件的使用
+            // ElementUI其实Vue组件，和VueRouter用法一样 Vue.use(名字)
+            Vue.use(ElementUI)
+        结论：可以在任何一个.vue文件的template通过组件名使用组件
+    h.整理项目
+      ①.处理src中的文件：
+        将assets文件夹中的图片删除，将components文件夹中的HelloWorld.vue删除；将router文件夹中index.js中的引入代码删除，如：
+            import HelloWorld from '@/components/HelloWorld'
+        将index.js中相关HelloWorld的删除，保留如下：
+            routes: [
+              {
+                path: '/',
+                name: 'login'
+                // component: 
+              }
+            ]
+      ②.App.vue中：
+        将template中的<div id="app"></div>里面的img删除
+            <img src="./assets/logo.png">
+        将style中的全部删除
+      ③.main.js中保持不变
+    i.使用git
+      首先在github网页账户中创建新项目的名字
+      ①.版本控制
+        第一次使用git
+          // 初始化
+          git init 
+          // 将工作区 放在 暂存区
+          git add .
+          // 将暂存区 放在 本地仓库
+          git commit -m "初始化项目"
+          // 新建远程仓库->关联仓库
+          ....
+          // 推送
+          git push -u origin master
+        完成一个小功能,提交/推送代码
+          git add .
+          git commit -m "注释"
+          git push
+        
+        git工具 -> gitbash -> git指令操作-> 任何cmd执行git指令->git是无效指令-> 配置windows系统的环境变量
+        如何配置git的环境变量：
+          1. 找到git安装位置
+          2.修改计算技属性->path全局变量
+        注意: 如果不想改全局path , 可以在gitbash中使用git
+        项目中操作步骤：
+          git  init 
+          git status
+          git add .
+          git status
+          git commit -m "初始化项目"
+          在github官网中点击 "+" -> 点击New reponsitory 
+          添加Repository name -> shopmanager(和项目一个名字) -> 点击 Create repository
+          git remote add origin https://github.com/mile666/shopmanager.git
+          git push -u origin master
+          (有可能需要输入用户名，弹框的形式的密码)
+          注意：
+            每完成一个小功能 提交commit一次
+            每完成大功能 push一次
+      ②.分支管理
+        管理代码-> 合并代码
+        项目3个人-> 区分代码是谁写的?->新建分支
+        每个分支管理自己的代码 有默认分支->git branch
+        主分支master:git push
+        新建子分支A->编写代码->编码完成->add/commit -> 提交A->
+        切换到master分支->合并代码git merge
+        新建子分支B->编写代码->编码完成->add/commit -> 提交B->
+        切换到master分支->合并代码git merge
+        结论: master/ dev-login /dev-users
+
+        // 检查分支
+        git branch
+        // 新建分支并且切换到该分支
+        // dev-login用来实现项目登录功能 
+        git checkout -b 分支名(dev-login)
+        // 接下来所有代码操作都是在dev-login分支上
+        项目中操作步骤：
+          // 查询分支
+          git branch
+          => 显示  * master    表示：一个master分支(主分支) *表示当前分支是master
+          // 新建分支叫dev-login
+          git checkout -b dev-login
+          // 查询分支
+          git branch
+          => 显示  * dev-login  master  表示：有两个分支即dev-login和master 当前分支是dev-login
+  2.登录
+    a.新建分支-login 组件-配置路由
+      ①.在src文件夹的components文件夹中新建login.vue,并添加template、script、style标准结构，在template标签中添加<div>login---</div>
+      在router文件夹的index.js中引入vue-router的后面添加引入login.vue，如：
+          // import Login from '../components/login.vue'
+          // webpack项目模板 提供@表示src文件夹->自动找到src文件夹
+          import Login from '@/components/login.vue'
+      整理index.js中的routes为：
+          routes: [
+            {
+              name: 'login',
+              path: '/login',
+              component: Login
+            }
+          ]
+      ②.在components文件夹中新建home.vue，在template标签中添加<div> home---</div>
+      在router文件夹的index.js中引入Login的后面添加引入home.vue，如：
+          import Home from '@/components/home.vue'
+      在index.js中配置路由，在routes中login前面添加，如下：
+          {
+            name: 'home',
+            path: '/',
+            component: Home
+          }
+      ③.项目中的git操作：
+        // 查看状态
+        git status
+        // 将工作区 放在 暂存区
+        git add .
+        // 将暂存区 放在 本地仓库，添加备注
+        git commit -m "登录-路由配置"
+        // 查看分支
+        git branch
+        => 显示 * dev-login master 
+        // 切换到master上
+        git checkout master
+        注意：推送只在主分支master上
+        // 查看分支
+        git branch
+        => 显示 * master dev-login
+        // 把dev-login 所有代码合并到当前分支上master
+        git merge dev-login
+        // 查看状态(防止在master上有新的操作)
+        git status
+        // 推送代码
+        git push
+        注意：如果合并代码后git status出现问题，需要git add . 和 git commit -m ""
+        // 推送完，切换回dev-login分支
+        git status
+        git checkout dev-login
+        git branch
+    b.引入表单组件
+      ①.根据展示效果，整理页面
+        在element-ui中找到form表单中对齐方式的代码<el-form></el-form>复制到login.vue的template的div中(为了调节样式)，并给div添加class="login-wrap"，将el-form标签中的:label-position的值改为label-position="top"，:model属性改为formdata；在export default{}中添加如下：
+            data () {
+              return {
+                formdata: {
+                  username: '',
+                  password: ''
+                }
+              }
+            }
+        在2个el-input标签中的v-model属性值分别改为formdata.username和formdata.password，将第3个el-input删除，将label的值分别改为用户名和密码；在el-form标签里面添加如下：
+            <h2>用户登录</h2>
+        在element-ui中找到button按钮中的基本用法的主要按钮，添加到el-form标签里面的最后面，并修改为：
+            <el-button type="primary">登录</el-button>
+        给el-form标签添加类名
+            class="login-form"
+        给el-button标签添加类名
+            class="login-btn"
+      ②.项目中的git操作：
+          // 查看分支
+          git branch
+          => 显示 显示 * dev-login master 
+          git status
+          git add .
+          git commit -m "登录-引入表单组件"
+          注意：  
+            每完成一个小功能就提交一下，每完成一个大功能合并代码并推送
+    c.样式调整
+      在src文件夹assets文件夹中新建css文件夹，在css文件夹中新建base.css，添加如下代码:
+          html,
+          body, 
+          h2 {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+          }
+      在main.js中引入index.css后面，引入公共样式base.css，如下:
+          import '@/assets/css/base.css'
+      在login.vue中的style标签添加如下：
+          .login-wrap{
+            height: 100%;
+            background-color: #324152;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+          .login-form {
+            background-color: #fff;
+            width:400px;
+            border-radius: 5px;
+            padding: 30px;
+          }
+          .login-btn{
+            width: 100%;
+          }
+      注意：此次的类名为login-wrap没有得到告诉为100%，原因是因为如果是百分比布局的需要一层一层的传递，才会得到100%的布局，而在login-wrap类名的div的外面还有一层为id="app"的没有给到百分比布局，所以在App.vue中的style标签的里面添加：
+          #app {
+            height: 100%;
+          }
+    d.axios插件
+      查看接口文档中的登录-登录验证接口，发送请求
+      ①.安装axios 
+            npm i axios
+      ②.导入
+        在main.js中导入router后面，添加导入axios；并添加全局的 axios 默认值(即查看axios中文说明中的内容，查找baseURL)，查看接口文档中接口说明可以获取到值；往原型上添加一个成员(这样就可以统一导入直接使用aixos了)，
+            import axios from 'axios'
+            axios.defaults.baseURL = 'http://localhost:8888/api/private/v1/'
+            Vue.prototype.$http = axios
+      ③.使用
+        在login.vue的el-button标签的登录添加@click.prevent="handlelogin()"，在script标签的data后面添加methods，并在methods中添加handlelogin方法具体如下代码：
+            methods: {
+              // 发起登录请求
+              handlelogin () {
+                this.$http
+                  .post(`login`, this.formdata)
+                  .then((res) => {
+                    // console.log(res)
+                    const {
+                      data: {
+                        data,
+                        meta: {msg, status}
+                      }
+                    } = res
+                    if(status === 200){
+                      console.log('login---success')
+                    } else {
+                      console.log('login---errr')
+                    }
+                  })
+                  .catch(err => {
+                    console.log(err)
+                  })
+              }
+            }
+        解析：
+          // 解析把后面name的值abc赋值给前面name的newname
+          const {name: newname} = {name:'abc'}
+          // 所以只可以使用newname
+          console.log(newname)
+      ④.项目中的git操作：
+        git status
+        git add .
+        git commit -m "登录-发送请求1"
+    e.引入提示框组件
+      在element-ui中找message消息提示的不同状态的错误代码方法opent4的内容修改并赋值到login.vue中的hanlelogin方法中状态码不等于200的时候，如下：
+          if (status === 200) {
+            console.log('login---success')
+            // 渲染home.vue
+          } else {
+            // 用户名/密码错误
+            // console.log('login---errr')
+            // console.log(msg)
+            this.$message.error(msg)
+          }
+    f.登录成功-进入home 组件
+      ①.处理登录成功跳转home页面
+        在login.vue中handlelogin方法中状态码部分修改，如下：
+            if (status === 200) {
+              console.log('login---success')
+              // 渲染home.vue <- 改标识/ <- js代码编程导航$router
+              this.$router.push({
+                name: 'home'
+              })
+            } else {
+              // 用户名/密码错误
+              // console.log('login---errr')
+              // console.log(msg)
+              this.$message.error(msg)
+            }
+          })
+          .catch(err => {
+            console.log(err)
+          })
+      ②.补充知识点:(ES6结构赋值)
+        // ES6解构赋值：把js容器([]和{})中的数据提取出来，赋值给变量的过程
+        // // 1.数组的解构赋值
+        // // 把1,2,3提出来赋值给a,b,c
+        // const [a, b, c, d=20] = [1, 2, 3] 
+
+        // 2.对象的解构赋值
+        // // 语法1
+        // const {age} = {name: 'abc', age: 20} 
+        // console.log(age)
+
+        // // 语法2 起别名
+        // const {name:newname} = {name: 'abc', age: 20} 
+        // console.log(newname)
+        
+        // const {name:name} = {name: 'abc', age: 20} 
+        // console.log(name)
+
+        // const {name} = {name: 'abc', age: 20} 
+        // console.log(name)
+
+        // const {per} = {per: {name: 'abc'}} 
+        // per={name: 'abc'}
+        
+        // const {per:newper} = {per: {name: 'abc'}} 
+        // newper={name: 'abc'}
+        
+        // const {per:newper} = {per: {name: 'abc'}} 
+        // // const newper = {name: 'abc'}
+        // const {name} = {name: 'abc'}
+
+        const {per:{name:newname}} = {per:{name: 'abc'}}
+        // newname = abc
+        console.log(newname)
+        总结：对象(const {per:{name}} = {per:{name:'abc'}}) -> log(name)
+    g.简化登录请求代码-async 和 await 
+      async+await简化代码:把异步代码变得像同步
+      修改login.vue中handlelogin方法简化代码，具体如下：
+            // 发起登录请求
+          async handlelogin () {
+            // 目前代码：异步的结果res在一个函数里面获取的
+            // 目的：res的获取是同步的
+            const res = await this.$http.post(`login`, this.formdata)
+            // console.log(res)
+            const {
+              data: {
+                data,
+                meta: {msg, status}
+              }
+            } = res
+            if (status === 200) {
+              console.log('login---success')
+              // 渲染home.vue <- 改标识/ <- js代码编程导航$router
+              this.$router.push({
+                name: 'home'
+              })
+            } else {
+              // 用户名/密码错误
+              this.$message.error(msg)
+            }
+          }
+      步骤：
+        ①.找到异步代码 前面加await 接收异步结果const res
+        ②.找到异步代码最近的外层函数 , 前面加async
+      目的: 简化代码，防止层层嵌套
+    h.保存token值
+      将login.vue中的hanleLogin方法中的
+          const {
+            data: {
+              data,
+              meta: {msg, status}
+            }
+          } = res
+      修改为
+          const {
+            data: {
+              data: {token},
+              meta: {msg, status}
+            }
+          } = res
+      同时在if (status === 200) {...}中this.$router.push({name: 'home'})前面添加如下代码
+          // 提示：token值目前不需要关心，将来要用，把token永久存储
+          // session/cookie/localStorage(Html5新特性)
+          // localStorage.setItem(key名:要存储的数据 )
+          localStorage.setItem('token', token)
+      将来要使用用户token数据，把正确用户token存储->cookie(简单数据)/session(服务端存储)/sessionStorage(会话存储)/localStorage(存储体积大的数据)
+      查看：在浏览器控制台application -> storage
+         //存值
+         localStorage.setItem('token',token)
+         //取值
+         localStorage.getItem('token')
+      项目中的git操作：
+        git status
+        git add .
+        git commit -m "登录功能"
+        git branch
+        => 显示 * dev-login master 
+        // 切换到master上
+        git checkout master
+        注意：推送只在主分支master上
+        // 查看分支
+        git branch
+        => 显示 * master dev-login
+        // 把dev-login 所有代码合并到当前分支上master
+        git merge dev-login
+        // 查看状态(防止在master上有新的操作)
+        git status
+        // 推送代码
+        git push
+        注意：如果合并代码后git status出现问题，需要git add . 和 git commit -m ""
+        // 推送完，切换回dev-login分支
+        git status
+        git checkout dev-login
+        git branch
+  3.首页
+    a.布局容器-样式调整
+      ①.项目中操作步骤：
+          git branch
+          =>显示 * dev-login master
+          // 切换到master主分支上
+          git checkout master
+          // 创建dev-home分支
+          git checkout -b dev-home
+          // 查询分支
+          git branch
+          => 显示  * dev-home dev-login  master
+      ②.在element-ui的container布局容器中的常见页面布局的例子代码复制到home.vue的template中
+          <el-container>
+            <el-header>Header</el-header>
+            <el-container>
+              <el-aside width="200px">Aside</el-aside>
+              <el-main>Main</el-main>
+            </el-container>
+          </el-container>
+      ③.添加样式
+        在home.vue中给el-container标签添加类名class="container"，给el-aside标签添加类名class="aside"，给el-main标签添加类名class="main"，在style标签中添加如下内容：
+            .container {
+              height: 100%;
+              background: #b3c0d1;
+            }
+            .aside {
+              background: red;
+            }
+            .main {
+              background: gray;
+            }
+    b.头部-样式调整
+      ①.在element-ui中查看layout布局，根据基本布局的第三个代码复制到home.vue中el-head标签中添加
+          <el-row>
+            <el-col :span="4">
+              <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="19">
+              <div class="grid-content bg-purple-light"></div>
+            </el-col>
+            <el-col :span="1">
+              <div class="grid-content bg-purple"></div>
+            </el-col>
+          </el-row>
+      ②.根据页面的展示效果，调试
+        将素材中的图标放在src文件夹的assets中，同时将<el-col :span="4">标签中的内容替换成图片，如下：
+            <img src="@/assets/logo.png" alt="图片加载失败">
+        给第2个el-col标签添加类名class="middle"，同时在style标签中container后面添加样式，如下：
+              .middle {
+                text-align: center;
+                line-height: 60px;
+              }
+        同时在第2个el-col标签里面添加如下代码：
+            <h2>电商后台管理系统</h2>
+        给第3个标签el-col中添加如下代码：
+            <a href="#" class="loginout">退出</a>
+        在style标签的里面的最后面添加如下代码：
+            .loginout {
+              line-height: 60px;
+              text-decoration: none;
+            }
+        注意
+          1. 找组件
+          2. 提供数据
+          3. 布局
+          4. 样式
+    c.侧边栏
+      ①.导航组件-文档
+        在element-ui中找到NavMenu导航菜单的侧栏，将侧栏的默认颜色复制放到home.vue的el-aside标签中，将el-menu标签中的两个事件@open和@close、类名删除目前不需要，将default-active的值修改为1，添加router属性最后显示效果如下：
+            <el-menu default-active="1" :router="true">
+        解析：router -> 开启路由模式，点击对应的导航，当前的path就是激活导航的index值 
+        注意：
+          在属性router前面加':'的意思是布尔类型，如果不加表示字符串
+        常用属性：
+          el-menu router 属性
+          el-submenu index 属性
+      ②.引入导航组件-调整
+        修改导航，将home.vue中的导航二 三 四删除；将分组2、el-menu-item-group标签、选项2、分组一删除，给选项1添加一个图标，修改图标，最终修改为：
+            <!-- 用户管理 -->
+            <el-submenu index="1">
+              <template slot="title">
+                <i class="el-icon-location"></i>
+                <span>导航一</span>
+              </template>
+              <el-menu-item index="1-1">
+                <i class="el-icon-menu"></i>
+                选项1
+              </el-menu-item>
+            </el-submenu>
+        复制多分用户管理并修改标签内容，
+        a.问题：点击第一个时同时打开，
+          解决：同时修改el-submenu标签中index的值：用户管理为1，权限管理为2，商品管理为3，订单管理为4，数据统计为5;
+        b.问题：点击第二个，第一个不会关闭，
+          解决：添加只保持一个子菜单展开的属性unique-opened：在el-menu标签中添加:unique-opened="true"
+          注意：
+            在属性unique-opened前面加':'的意思是布尔类型，如果不加表示字符串
+          去掉侧边栏的红色背景。
+    d.首页
+      ①.进入首页的权限验证
+        梳理逻辑：
+          如果用户没有登录, /标识匹配到时 不能进入home.vue -> 显示login.vue 
+          if(有没有正确的token){渲染home.vue}，
+          if(没有token){改Login,显示login.vue}
+          代码位置 -> 在渲染home.vue之前  home.vue渲染完毕时 -> mounted()
+          beforeMount(){?}
+        在export default{}中添加beforeMount方法如下：
+            export default {
+              beforeMount () {
+                // console.log('beforMount------')
+                if (!localStorage.getItem('token')) {
+                  this.$router.push({
+                    name: 'login'
+                  })
+                }
+              }
+            }
+        测试：
+          到login页面，在浏览器控制台Application->localStorage中的token删除 -> 测试能否跳转到home页面
+          登录成功以后，回到login页面，测试login页面能进入home页面不 -> 可以进入home页面
+      ②.头部-退出功能
+        在home.vue中退出a标签添加@click.prevent="handleLoginout()"
+        在beforeMount后面添加methods:{},并在methods中添加handleLoginout，具体如下：
+            // 退出
+            handleLoginout () {
+              // 1.清除token
+              localStorage.clear()
+              // 2.跳转到login
+              this.$router.push({
+                name: 'login'
+              })
+              // 提示
+              this.$message.warning('退出成功')
+            }
+        测试：点击退出以后，回到login页面，输入url不能跳转到home页面
+      ③.合并分支-新建用户分支(用户管理)
+        项目中的git操作：
+          git status
+          git add .
+          git commit -m "home完成"
+          git branch
+          => 显示 * dev-home dev-login master
+          git checkout master
+          git branch
+          => 显示 * master dev-login dev-home
+          git merge dev-home
+          git status
+          git push
+          => 此时在主分支master上
+          // 创建新分支dev-users，并切换到dev-users分支上
+          git checkout -b dev-users
+          git branch
+          => 显示 * dev-users dev-home dev-login master
+  4.用户管理
+    a.用户列表
+      ①.新建组件-路由配置
+        点击用户列表跳转到/users页面，修改用户列表中el-menu-item标签中index的属性，改为
+            <el-menu-item index="users">
+        配置路由
+          在router文件夹的index.js中，在导入Home后面添加导入Users，如下：
+              import Users from "@/components/users.vue";
+          routes中配置路由在component:Home后面添加如下代码:
+              children:[{
+                name: 'users',
+                path: '/users',
+                component: Users
+              }]
+          (因为home和login是同级路由，而users路由时在home里面的，所以使用children)
+        在components文件夹中新建users.vue并添加template、script、style标签基本结构，在template标签中添加
+            <div>users---</div>
+        路由的步骤：
+          1.<router-link></router-link> 改标识 (相当于用户列表的el-menu-item标签的index="users")
+          2.提供容器 <router-view></router-view> (在home.vue中el-main标签位置)
+            在el-main标签中添加
+                <router-view></router-view>
+          3.提供组件 users.vue
+          4.newVueRouter()
+          5.配置路由 (相当于index.js中的home组件的children<-嵌套路由<-在home匹配成功之上)
+          6.挂载 (相当于main.js中的new Vue())
+      ②.卡片、面包屑
+        在users.vue的template中添加卡片标签
+            <!-- el-card小容器 可以理解为div 卡片 -->
+            <el-card class="box"></el-card>
+        在卡片标签中添加element-ui中面包屑的图标分隔符代码复制到卡片标签中，修改并调整，如下：
+            <!-- 面包屑 -->
+            <el-breadcrumb separator-class="el-icon-arrow-right">
+              <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+              <el-breadcrumb-item>用户管理</el-breadcrumb-item>
+              <el-breadcrumb-item>用户列表</el-breadcrumb-item>
+            </el-breadcrumb>
+      ③.搜索框和添加用户
+        搜索框和添加用户可以使用el-row>el-col标签，具体如下：
+            <!-- 搜索框 -->
+            <el-row class="searchBox">
+              <el-col></el-row>
+            </el-col>
+        在element-ui中的input输入框的复合型输入框代码复制到el-col标签的里面，组件中el-input使用v-model数据，将v-model的值改为v-model="query"同时添加 class="searchInput"，在export default{}中提供数据如下：
+            data () {
+              return {
+                query: ''
+              }
+            }
+        将el-input的类名删除，将整个el-select标签全部删除；添加el-button按钮如下：
+            <el-button type="primary">添加用户</el-button>
+        调节样式:
+          在users.vue中的style标签中添加如下样式代码：
+              .searchBox {
+                margin-top: 20px;
+              }
+              .searchInput{
+                width: 400px;
+              }
+      ④.引入表格组件
+        在element-ui中table表格的基础表格代码复制到users.vue的el-row标签的后面，
+            <!-- 表格 -->
+            <!-- tableData:[{data:?,name:?,address:?}] 
+            el-table-column 控制的列
+              label 控制的是表头
+              prop的值 控制的是该列中每一行单元格的内容
+            -->
+            <el-table :data="tableData" style="width: 100%">
+              <el-table-column prop="date" label="日期" width="180">
+              </el-table-column>
+              <el-table-column prop="name" label="姓名" width="180">
+              </el-table-column>
+              <el-table-column prop="address" label="地址">
+              </el-table-column>
+            </el-table>
+        同时将tableData的数据也放到users.vue的data中query的后面，
+            tableData: [{
+              date: '2016-05-02',
+              name: '王小虎',
+              address: '上海市普陀区金沙江路 1518 弄'
+            }, {
+              date: '2016-05-04',
+              name: '王小虎',
+              address: '上海市普陀区金沙江路 1517 弄'
+            }, {
+              date: '2016-05-01',
+              name: '王小虎',
+              address: '上海市普陀区金沙江路 1519 弄'
+            }, {
+              date: '2016-05-03',
+              name: '王小虎',
+              address: '上海市普陀区金沙江路 1516 弄'
+            }]
+        解析：  
+            el-table标签 -> data属性->控制的该表格的数据；
+            el-table-column -> 控制的是列，
+            el-table-column标签 -> label 控制的是表头，
+            el-table-column标签 -> prop 控制的单元格的内容.
+      ⑤.表头处理
+        在users.vue中表格中的el-table标签保留1个，其余的删除并复制第一条，保留7条；
+          1.修改表头的内容：
+            将第一个label的值"日期"修改"#"，将第一个label的值"日期"修改"姓名"，将第一个label的值"日期"修改"邮箱"，将第一个label的值"日期"修改"电话"，将第一个label的值"日期"修改"创建日期"，将第一个label的值"日期"修改"用户状态"，将第一个label的值"日期"修改"操作"；
+          2.调节列的宽度:
+            '#'的el-table-column标签的width改为width="80"
+            '姓名'的el-table-column标签的width改为width="100"
+            '邮箱'的el-table-column标签的width改为width="140"
+            '电话'的el-table-column标签的width改为width="140"
+            '创建日期'的el-table-column标签的width改为width="200"
+            '用户状态'的el-table-column标签的width改为width="120"
+            '操作'的el-table-column标签的width改为width="200"
+          3.将script标签中的data的tableData删除，换成list:[]，将表格中el-table标签中的:data也换成list
+      ⑥.请求数据
+        查看接口文档 -> 1.3.1 用户数据列表 -> 三个参数 -> 必写(pagenum、pagesize)、可以为空的(query)
+        在users.vue中script标签中export default{}添加methods:{}中添加getTableData方法，在methods前面添加如下代码：
+            // 获取首屏数据写在created中，也可以写在mounted中
+            created(){
+              this.getTableData()
+            },
+        在methods中的getTableData方法具体如下：
+          (除了登录的请求以外，需要在头部加token值<-1.1 API V1接口说明中第4条(需要授权的API,必须在请求头中使用 Authorization 字段提供 token 令牌) <-接口文档)
+              async getTableData () {
+                // this.$http
+                // 模板字符串`${}`
+                // const per = {name: 'abc'}
+                // `${name}`  -> abc
+                // 请求头
+                // {
+                //   // contentType: 'text/html';
+                //   // Authorization: ? 正确用户的token
+                // }
+
+                // 设置请求头？
+                // 设置发送请求时的请求头 -> axios库 -> 找axios中有没有可以设置headers头部的API -> 看axios文档
+                // axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+                const AUTH_TOKEN = localStorage.getItem('token')
+                console.log(AUTH_TOKEN)
+                this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
+                const res = await this.$http.get(`users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`)
+                console.log(res)
+              }
+        在script标签中的data中的query为搜索时的关键字并添加pagenum: 1,pagesize: 2,具体如下：
+            data () {
+              return {
+                // 搜索时的关键字
+                query: '',
+                // 分页功能 -> 前提接口必须支持分页->通常在接口url参数中类似page的参数名
+                pagenum: 1,
+                pagesize: 2,
+                // 表格数据
+                list: []
+              }
+            },
+        总结：
+          1.模板字符串
+              模板字符串`${}`
+              const per = {name: 'abc'}
+              `${name}`  -> abc
+          2.根据接口文档，需要授权的API,必须在请求头中使用 Authorization 字段提供 token 令牌 -> 除了登录之外的所有 API 请求 -> 都需要授权 -> 设置请求头
+              axios使用说明 -> 全局的 axios 默认值 ->
+              axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+      ⑦.渲染数据-一般数据
+        单元格里面的数据分类两类:
+          一类：文本数据(数据是什么样直接展示)，一般数据 prop 的属性值
+          二类：按钮和组件(需要处理数据后再展示)，特殊数据，不是 prop 的属性值 而是一些组件
+        在getTableData方法中console.log(res)后面添加如下：
+            const {data, meta: {msg, status}} = res.data
+              if (status === 200) {
+                this.list = data.users
+                // console.log(this.list)
+              }
+        将数据中的字段兑换响应的表格的prop属性值，如下：
+            <el-table-column prop="id" label="#" width="80"></el-table-column>
+            <el-table-column prop="username" label="姓名" width="100"></el-table-column>
+            <el-table-column prop="email" label="邮箱" width="140"></el-table-column>
+            <el-table-column prop="mobile" label="电话" width="140"></el-table-column>
+            <el-table-column
+              prop="create_time"
+              label="创建日期"
+              width="200"
+            ></el-table-column>
+      ⑧.渲染数据-日期格式处理
+        日期需要处理 -> 过滤器 -> 两类(全局 Vue.filter 和局部)三步->1. v-bind 后面 2{{msg | 名字}}
+          在main.js中Vue.config.productionTip = false后面添加
+              // 全局过滤器 - 处理日期
+              Vue.filter('fmtdate', (v) => {
+                return moment(v).format('YYYY-MM-DD')
+              })
+          下载：
+            npm i moment
+          导入：
+            在main.js中导入axios的后面添加
+                import moment from 'moment'
+          使用：
+            在users.vue的"创建日期"标签使用如下：
+                <!-- 过滤器fmtdata
+                  1. v-bind 后面
+                  2{{msg | 名字}}
+                -->
+                <!-- 1.思路 直接给prop赋值 不行-->
+                <!-- <el-table-column prop="create_time | fmtdate" label="创建日期" width="200"></el-table-column> -->
+                <!-- 2.思路 可以实现效果 但是error -->
+                <!-- <el-table-column prop="create_time" label="创建日期" width="200">
+                  {{create_time | fmtdate}}
+                </el-table-column> -->
+                <!-- 3.单元格内容不是prop的值，希望{{}}的结果->
+                  如果单元格内容不是prop的值，需要给单元格内容的外层加template,
+                  此时,外层数据和内层数据有联系吗？没联系
+                  外层的list.对象.create_time
+                  template 有一个属性slot-scope="外层数据"
+                -->
+                <!-- 3.总结：
+                  前提：单元格的内容不是prop的值，
+                  3.1 给单元格内容外层加template
+                  3.2 给template设置slot-scope
+                  3.3 slot-scope的值自动绑定为外层数据el-table ：data="list"
+                  3.4 在template内部通过list.row 自动取出数组list中每个对象
+                  3.5 list.row.属性create_time
+                  注意：row是固定写法
+                -->
+                <el-table-column prop="create_time" label="创建日期" width="200">
+                  <template slot-scope="list">
+                    <!-- 内层list.row 表示的是list的每个对象 -->
+                    {{ list.row.create_time | fmtdate}}
+                  </template>
+                </el-table-column>
+        前提:如果单元格数据不是 prop 的值,此时
+            1. 给内容外层加 template
+            2. 设置 template 的 slot-scope="scope"，此时el-table-column标签的prop="create_time"可去掉，而slot-scope的值可以随意命名，但slot-scope的值必须和内侧的{{}}里面的值一致xxx.row.属性
+            3. 内部通过 scope.row.属性名访问数据
+        注意: "scope"可以随便命名,自动找外层数据 list
+        项目中的git操作：
+          git status
+          git add .
+          git commit -m "非文本数据的数据slot-scope"
+      ⑨.渲染数据-用户状态开关
+        前提：单元格内容是一个组件，不是prop的值
+        处理：
+          1.将el-table-column标签中的prop=""属性删除
+          2.在el-table-column标签中添加template标签(因为单元格内容是一个组件)
+          3.在template标签中添加slot-scope="scope"属性值
+          4.在element-ui中switch开关的基本用法的代码将el-switch标签放在template标签里，并修改el-switch标签中的v-model的值为"scope.row.mg_state"
+        具体代码如下：
+            <el-table-column label="用户状态" width="120">
+              <template slot-scope="scope">
+                <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+              </template>
+            </el-table-column>
+        注意：当通过页面操作 点击开关->会让 mg_state 的值变化
+      ⑩.渲染数据-操作
+        步骤：
+          1.将el-table-column标签中的prop的属性删除(单元格内容是一个组件)
+          2.添加template标签，并给template标签添加 slot-scope="scope"
+          3.element-ui的button按钮的基本用法代码的最后的代码的一段el-button复制到template标签中，保留type的属性为primary、danger、success值的标签
+          4.调节按钮大小和 颜色：给3个el-button标签添加属性size="mini"和plain
+        具体代码如下：
+            <el-table-column label="操作" width="200">
+              <template slot-scope="scope">
+                <el-button type="primary" icon="el-icon-edit" circle size="mini" plain></el-button>
+                <el-button type="danger" icon="el-icon-delete" circle size="mini" plain></el-button>
+                <el-button type="success" icon="el-icon-check" circle size="mini" plain></el-button>
+              </template>
+            </el-table-column>
+        项目中的git操作：
+          git status
+          git add .
+          git commit -m "表格布局"
+      ⑩+①.分页组件-文档-引入
+          在element-ui的Pagination分页的附加功能代码中的完整功能el-pagination代码复制到el-table标签的外面，具体如下：
+              <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage4"
+                :page-sizes="[100, 200, 300, 400]"
+                :page-size="100"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="400">
+              </el-pagination>
+          解析：
+            // 15条 每页条数pagesize=2 -> 8页
+            // 1-2 3-4 5-6 ... 
+            // pagenum
+          总结：
+            分页组件 - 文档
+            1. @size-change 每页条数改变时
+            2. @current-change 原来是第一页,点击 2 页
+            3. current-page 当前页码
+            4. total 总条数
+      ⑩+②.分页组件-配置数据
+          将element-ui中的Pagination分页的附加功能代码中的完整功能的methods代码的两个方法放到users.vue中的methods中的getTableData前面，具体如下：
+              // 分页相关的方法
+              handleSizeChange(val) {
+                console.log(`每页 ${val} 条`);
+              },
+              handleCurrentChange(val) {
+                console.log(`当前页: ${val}`);
+              },
+          将el-pagination标签中的:current-page的值改为"pagenum"；:page-sizes的值改为"[2, 4, 6, 8]"；:page-size的值改为2；:total的值改为total
+          在users.vue中的script标签的data中pagesize的后面添加total: -1,具体如下： 
+              <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="pagenum"
+                :page-sizes="[2, 4, 6, 8]"
+                :page-size="2"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total">
+              </el-pagination>
+          获取数据的条数，在res数据中的total，所以在getTableData方法中if (status === 200) {..}中开头添加
+              this.total = data.total
+      ⑩+③.分页组件-分页请求
+          梳理：点击页码 -> 发送请求 -> 修改handleCurrentChange方法，具体如下:
+              // 当前1页 -> 点击2页 -> 获取第二页数据
+              handleCurrentChange (val) {
+                console.log(`当前页: ${val}`)
+                // 根据新页码发送请求
+                this.pagenum = val
+                this.getTableData()
+              },
+          梳理：选择每页条数 -> 发送请求 -> 修改handleSizeChange方法，具体如下:
+              // 每页2条 -> 每页4条 -> 按照4条发送请求
+              handleSizeChange (val) {
+                console.log(`每页 ${val} 条`)
+                // 防止选择2条/页时，点击最后一页的页码，在选择8条/页时，显示暂无数据的问题，设置pagenum=1，从第一页开始加载
+                this.pagenum = 1
+                this.pagesize = val
+                this.getTableData()
+              },
+          pagenum1 pagesize2 -> 获取数据库中前两条数据
+          pagenum=3 pagesize=3 -> 获取数据库中第 7/8/9 条数据
+          项目中的git操作：
+            git add .
+            git commit -m "分页完成"
+      ⑩+④.搜索用户
+          在users.vue中给搜索的el-button添加事件@click="searchUser()",在methods中添加searchUser，具体如下：
+              // 搜索用户
+              searchUser () {
+                // 输入框组件 -> 在组件文本清空时 -> 做一些事儿
+                // query 数据默认''
+                this.getTableData()
+              },
+          使用clearable清空，在搜索的el-input标签中添加属性clearable，添加@clear="getAllUsers()"，在methods中添加getAllUsers，具体如下：
+              // 清空时获取所有用户
+              getAllUsers () {
+                // 此时 query 查询参数已经是''
+                this.getTableData()
+              },
+          问题：点击页码后，再搜索时，无数据显示
+          解决：
+            在searchUser方法中添加this.pagenum = 1，如下：
+                // 搜索用户
+                searchUser () {
+                  // 输入框组件 -> 在组件文本清空时 -> 做一些事儿
+                  // query 数据默认''
+                  this.pagenum = 1
+                  this.getTableData()
+                },
+          项目中的git操作：
+            git add .
+            git commit -m "搜索完成"
+      ⑩+⑤.添加用户-显示对话框
+          点击添加用户按钮 -> 显示表单弹框
+          在element-ui中Dialog对话框->自定义内容->打开嵌套表单的Dialog->将<el-dialog>...</el-dialog>的代码放到user.vue中的el-card标签的里面的最后面，
+          修改标签属性：
+            将el-dialog标签中的:visible.sync值改为"dialogFormVisibleAdd"；取消的el-button标签的@click的值改为"dialogFormVisibleAdd = false"；确定的el-button标签的@click的值改为"dialogFormVisibleAdd = false"
+          添加属性的值：
+            在users.vue中的script标签的data中的list:[]后面添加：
+                // 对话框
+                dialogFormVisibleAdd: false
+          将element-ui中form表单的对齐方式中el-form标签代码替换在users.vue中添加用户对话框中的el-form(为了修改的少)，
+          修改数据：
+            将":label-position"属性和值修改为label-position="left"；将":model"属性的值修改为"formdata"；并将el-input标签里的属性v-model的值里的formLabelAlign改为formdata；
+          添加表单数据：
+            在script标签中data的dialogFormVisibleAdd: false,后面添加，查看接口文档中1.3.2添加用户中需要使用的参数(username、password、email、mobile)，如下：
+                // 添加表单数据
+                formData: {
+                  // username、password、email、mobile
+                  username:  '',
+                  password: '',
+                  email: '',
+                  mobile: ''
+                }
+          处理表单结构：
+            在el-form标签中复制一份el-form-item放在后面将el-form-item标签中label属性的值依次改为"用户名"、"密码"、"邮箱"、"电话"；将el-input标签中的v-model的值依次改为"formdata.username"、"formdata.password"、"formdata.email"、"formdata.mobile"
+          给添加用户按钮添加@click="showDiaAddUser()"，在methods中getAllUsers方法前面添加
+              // 添加用户 - 显示对话框
+              showDiaAddUser () {
+                this.dialogFormVisibleAdd = true
+              },
+          细节：命名时最好使用"对话框添加"，如：dialogFormVisibleAdd，为了更好的查找及使用
+          使用步骤：1.复制代码 2. 提供/配置属性或者方法 3. 使用
+          项目中的git操作：
+            git add .
+            git commit -m "添加-显示对话框"
+      ⑩+⑤.添加用户-发送请求
+        在users.vue中添加用户的表单页面的确定按钮添加事件，改为@click="addUser()"，在methods中showDiaAddUser前面添加addUser方法，根据接口文档发送请求post请求
+            // 添加用户 - 发送请求
+            async addUser () {
+              // 1.获取表单数据 发请求
+              const res = await this.$http.post('users', this.formdata)
+              console.log(res)
+              // 2.关闭对话框
+              this.dialogFormVisibleAdd = false
+              // 3.更新表格
+              this.getTableData() 
+            },
+      ⑩+⑥.删除用户-打开确认框
+          在users.vue中找到删除按钮，添加@click="showMsgBox()"，在methods中addUser方法的前面添加，在element-ui的MessageBox弹框的确认消息代码里的open方法复制放到showMsgBox方法里,如下：
+              // 删除 - 弹出确认框 confirm
+              showMsgBox () {
+                this.$confirm('是否删除用户?', '提示', {
+                  confirmButtonText: '确定',
+                  cancelButtonText: '取消',
+                  type: 'warning'
+                }).then(() => {
+                  // this.$message({
+                  //   type: 'success',
+                  //   message: '删除成功!'
+                  // })
+                  this.$message.success('删除成功！')
+                }).catch(() => {
+                  // this.$message({
+                  //   type: 'info',
+                  //   message: '已取消删除'
+                  // })
+                  this.$message.info('已取消删除')
+                })
+              },
+          总结：
+            引入确认框
+              点击确定 -> 会执行.then
+              点击取消 -> 会执行.catch
+      ⑩+⑦.删除用户-处理响应
+          点击确定(.then())以后发送请求
+          在showMsgBox方法中.then()中发送请求，查看接口文档发送delete请求，请求路径users/:id，
+          获取用户id的方式有两种：
+            1.data中有没有专门的id数据  -> 没有
+            2.方法调用时能不能传递用户id  -> 有
+          所以在调用删除按钮的showMsgBox方法中使用外层的scope，即@click="showMsgBox(scope.row)"，所以将showMsgBox修改为：
+              // 删除 - 弹出确认框 confirm
+              async showMsgBox (user) {
+                this.$confirm('是否删除用户?', '提示', {
+                  confirmButtonText: '确定',
+                  cancelButtonText: '取消',
+                  type: 'warning'
+                }).then(async () => {
+                  // this.$message({
+                  //   type: 'success',
+                  //   message: '删除成功!'
+                  // })
+                  // 发送请求
+                  // :id -> 用户的id -> 数据来源？(1.data中有没有专门的id数据 2.方法调用时能不能传递用户id)
+                  const res = await this.$http.delete(`users/${user.id}`)
+                  console.log(res)
+                  const {meta: {msg, status}} = res.data
+                  if (status === 200) {
+                    // 提示框
+                    this.$message.success(msg)
+                    // 更新表格
+                    this.getTableData()
+                  }
+                }).catch(() => {
+                  // this.$message({
+                  //   type: 'info',
+                  //   message: '已取消删除'
+                  // })
+                  this.$message.info('已取消删除')
+                })
+              },
+          测试:"添加用户"和"删除按钮"是否有bug
+          问题： 
+            点击"添加用户"添加用户成功后，再次点击"添加用户"，表单中显示上次添加的数据，
+          解决：
+            在showDiaAddUser方法中添加清空表单的方法，具体如下：
+                // 添加用户 - 显示对话框
+                showDiaAddUser () {
+                  // 清空
+                  this.formdata = {}
+                  this.dialogFormVisibleAdd = true
+                },
+          问题：
+            如果某一页码中两条数据都删除了，就会显示暂无数据
+          解决：
+            删除一条数据后从第1页开始显示，在showMsgBox方法中.then方法中的if (status === 200) {...}中的this.getTableData()前面添加，设置从第一页开始，具体如下：
+                if (status === 200) {
+                  // 提示框
+                  this.$message.success(msg)
+                  // 更新表格
+                  this.pagenum = 1
+                  this.getTableData()
+                }
+          项目中的git操作：
+            git add .
+            git commit -m "添加-删除"
+      ⑩+⑧.编辑用户-显示对话框
+          给编辑按钮el-button标签添加@click="showDiaEditUser()"，将添加用户的对话框复制到添加用户对话框el-dialog的后面，编辑代码
+              <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEdit">
+                <el-form label-position="left" label-width="80px" :model="formdata">
+                  <el-form-item label="用户名">
+                    <el-input v-model="formdata.username"></el-input>
+                  </el-form-item>
+                  <el-form-item label="邮箱">
+                    <el-input v-model="formdata.email"></el-input>
+                  </el-form-item>
+                  <el-form-item label="电话">
+                    <el-input v-model="formdata.mobile"></el-input>
+                  </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                  <el-button @click="dialogFormVisibleEdit = false">取 消</el-button>
+                  <el-button type="primary" @click="editUser()">确 定</el-button>
+                </div>
+              </el-dialog>
+          修改数据
+            在data中dialogFormVisibleAdd后面添加:
+                dialogFormVisibleEdit: false,
+            在methods中添加
+                // 编辑 - 发送请求
+                editUser () {
+
+                },
+                showDiaEditUser () { 
+                  // 编辑对话框-显示
+                  this.dialogFormVisibleEdit = true
+                },
+          注意：
+            表单数据使用的是之前的 formdata
+      ⑩+⑨.编辑用户-显示编辑数据
+          给编辑按钮的事件方法传递参数，如：
+              @click="showDiaEditUser(scope.row)"
+          在methods中showDiaEditUser方法中传递形参并使用如：
+              // 编辑 - 显示对话框
+              showDiaEditUser (user) {
+                // this.formdata = 要前3个值
+                this.formdata = user
+                // 编辑对话框-显示
+                this.dialogFormVisibleEdit = true
+              },
+          点击编辑按钮后用户名显示禁用，给用户名el-form-item标签里面的el-input标签添加disabled
+          总结：
+            1. 打开对话框时 传递 scope.row->user
+            2. 打开对话框时 this.formdata=user
+      ⑩+⑩.编辑用户-发送请求
+          在editUser方法中发送请求，请求的方式及路径查看接口文档，获取需要修改的id(查看当前用户id -> 数据 -> 1.data中没有 2.方法没有合适的实参)，在已经存在的data数据中有没有用户id即formData，因为在showDiaEditUser方法中的user中有id，this.formdata.id就是id，具体代码如下：
+              // 编辑 - 发送请求
+              async editUser () {
+                // 发送请求
+                // id -> 当前用户id -> 数据 -> 1.data中没有 2.方法没有合适的实参
+                // 使用this.formdata 必须保证数据有值
+                const res = await this.$http.put(`users/${this.formdata.id}`)
+                console.log(res)
+              },
+          在editUser中添加关闭对话框和更新表格，如下：
+              // 编辑 - 发送请求
+              async editUser () {
+                // 发送请求
+                // id -> 当前用户id -> 数据 -> 1.data中没有 2.方法没有合适的实参
+                // 使用this.formdata 必须保证数据有值
+                const res = await this.$http.put(`users/${this.formdata.id}`, this.formdata)
+                // console.log(res)
+                const {meta: {msg, status}} = res.data
+                if (status === 200) {
+                  // 关闭对话框
+                  this.dialogFormVisibleEdit = false
+                  // 更新表格
+                  this.getTableData()
+                }
+              },
+          项目中的git操作：
+            git add .
+            git commit -m "编辑完成"
+      ⑩+⑩+①.修改用户状态
+            用户状态是"红色"状态就是用户不能登录
+            查看element-ui中的Switch 开关的事件(Events)的change，在el-switch标签中添加@change="changeState(scope.row)",在methods中添加changeState方法定义，并查看接口文档中修改用户状态的请求路径和请求方式，具体如下：
+                // 修改用户状态
+                async changeState (user) {
+                  // users/:uId/state/:type
+                  // uid -> 用户id
+                  // type -> 用户状态
+                  const res = await this.$http.put(`users/${user.id}/state/${user.mg_state}`)
+                  console.log(res)
+                  const {meta: {status, msg}} = res.data
+                  if (status === 200) {
+                    this.$message.success(msg)
+                  }
+                },
+            总结：el-switch 使用 v-model 双绑 -> 点击开关->被绑定数据变化
+      ⑩+⑩+②.分配角色(处理"对勾"图标)
+            1.梳理：
+              每个用户都有角色,不同角色的权限(当前用户登录后,能做的事儿)是不同的；
+              点按钮 -> 打开对话框 -> 对话框中显示当前用户的信息(用户名和角色) -> 点击确定->修改用户的角色
+            2.显示对话框
+              点击操作的 check 按钮->打开对话框
+              点击"对勾"图标操作的 check 按钮，给"对勾"的图标el-button标签添加事件
+                  @click="showDiaSetRole((scope.row)"
+              在element-ui中Dialog 对话框 -> 自定义内容 -> 打开嵌套表单的Dialog的代码复制到 -> users.vue中的el-card标签里面的最后面(复制代码、改数据)
+                  <!-- 对话框 - 分配角色 -->
+                  <el-dialog title="分配角色" :visible.sync="dialogFormVisibleRole">
+                    <el-form label-position="left" label-width="80px" :model="formdata">
+                      <el-form-item label="用户名">
+                        {{formdata.username}}
+                      </el-form-item>
+                      <el-form-item label="角色">
+                        <el-select v-model="selectVal" placeholder="请选择角色名称">
+                          <el-option label="请选择" value="shanghai"></el-option>
+                          <!-- 其余5个option是动态生成的 v-for -->
+                          <el-option label="区域二" value="beijing"></el-option>
+                        </el-select>
+                      </el-form-item>
+                    </el-form>
+                    <div slot="footer" class="dialog-footer">
+                      <el-button @click="dialogFormVisibleRole = false">取 消</el-button>
+                      <el-button type="primary" @click="dialogFormVisibleRole = false">确 定</el-button>
+                    </div> 
+                  </el-dialog>
+              在data中dialogFormVisibleEdit: false,后面添加
+                  dialogFormVisibleRole:false     
+              在data中formData的后面添加
+                  //下拉框使用的数据
+                  selectval:1    
+              在methods中changeState前面添加如下代码：
+                  // 分配角色 - 显示对话框
+                  showDiaSetRole () {
+                    this.dialogFormVisibleRole = true
+                  },
+              项目中的git操作：
+                git add .
+                git commit -m "分配角色-打开对话框"
+            3.显示对话框的下拉框
+              下拉框的特性
+                1)默认显示请选择 : 当v-model绑定的值和option的value值一样 -> 显示label的值
+                2)当通过页面操作 -> 当选中某个label，此时，v-model绑定的数据值 = 被选中的label的value值
+              整理el-select标签的代码
+                  <!-- select+option
+                    v-model：绑定表单元素
+                    1.input type="text"
+                    2.其他表单元素(select + option)
+                  -->
+                  {{selectVal}}
+                  <el-select v-model="selectVal" placeholder="请选择角色名称">
+                    <el-option label="请选择" :value="-1"></el-option>
+                    <!-- 其余5个option是动态生成的 v-for -->
+                  </el-select>
+              查看接口文档中的1.5.1角色列表中的请求路径和请求方法
+              将methods中的showDiaSetRole方法修改为
+                  // 分配角色 - 显示对话框
+                  async showDiaSetRole () {
+                    this.dialogFormVisibleRole = true
+                    // 获取所有角色名称(5个)
+                    const res = await this.$http.get(`roles`)
+                    // console.log(res)
+                    const {meta: {msg, status}, data} = res.data
+                    if (status === 200) {
+                      this.roles = data
+                      console.log(this.roles)
+                    }
+                  },
+              在data中selectVal后面添加
+                  // 保存角色的数据
+                  roles: []
+              修改el-select标签的代码
+                  {{selectVal}}
+                  <el-select v-model="selectVal" placeholder="请选择角色名称">
+                    <el-option label="请选择" :value="-1"></el-option>
+                    <!-- 其余5个option是动态生成的 v-for -->
+                    <el-option :label="item.roleName" :value="item.id" v-for="(item, i) in roles" :key="item.id"></el-option>
+                  </el-select>
+              步骤：
+                1).显示了 5 个 option
+                2).获取角色名称
+                3).遍历 el-option
+            4.显示当前用户角色
+              给methods的showDiaSetRole传参user，并在里面添加
+                  this.formdata = user
+              这样el-form-item标签中的{{formdata.username}}就有值了
+              项目中的git操作：
+                git add .
+                git commit -m "显示角色名称-获取roles"
+            5.修改用户角色
+              根据接口文档中1.3.4根据ID查询用户信息
+              目的：不希望显示请选择 -> 希望显示对应的角色，比如主管->label->需要控制value
+              角色[30,31,34,39,40]
+              希望显示的是主管(30) -> label主管 -> value等于30
+              在methods中showDiaSetRole的里面的最后面添加
+                  // 获取当前用户的角色id
+                  const res2 = await this.$http.get(`users/${user.id}`)
+                  console.log(res2)
+                  // const {meta: {msg2, status2}, data2} = res2.data
+                  // if (status2 === 200){
+                  //   this.selectVal = data2.rid
+                  // }
+                  // 所有角色5个[每个角色有自己的id]
+                  // 用户信息中也有rid  角色rid
+                  this.selectVal = res2.data.data.rid
+              给分配角色的对话框中的确定按钮的事件修改为@click="setRole()"，在methods中添加setRole方法，查看接口文档中1.3.7分配用户角色的请求路径和请求方法,数据->data中有没有，方法中不能传递id，在data中 roles: [],最后面添加
+                  // 要是用户的id <- 要用户 <-
+                  currUserId:-1
+              在showDiaSetRole方法中有id，所以在showDiaSetRole方法中开头添加：
+                  this.currUserId = user.id
+              在methods中的setRole的方法如下
+                  // 分配角色 - 发送请求
+                  async setRole () {
+                    // 发送请求
+                    // users/:id/role
+                    const res = await this.$http.put(`users/${this.currUserId}/role`, {
+                      // rid角色id
+                      rid: this.selectVal
+                    })
+                    // console.log(res)
+                    const {meta: {msg, status}, data} = res.data
+                    if (status === 200) {
+                      // 关闭对话框
+                      this.dialogFormVisibleRole = false
+                      this.$message.success(msg)
+                    }
+                  },
+              项目中的git操作：
+                git add .
+                git commit -m "分页角色-完成"
+      ⑩+⑩+③.合并分支-推送
+            git status 
+            git branch
+            => 显示 * dev-users dev-home dev-login master
+            git checkout master
+            git status
+            git merge dev-users
+            git push
+    b.权限管理
+      ①.新建分支
+        项目中的git操作：
+          git  status
+          (git add .
+          git commit -m "")
+          git branch
+          => 显示 * master dev-users dev-home dev-login
+          git checkout -b dev-rights
+      ②.功能展示
+        角色列表
+          面包屑
+          表格
+          展开
+        权限列表
+      ③.权限列表
+        1)新建组件(路由配置)
+          在components文件夹中新建rights.vue(权限列表组件)，并创建template、script、style标签，在template标签中添加
+              <div>rights---</div>
+          在router文件夹中的index.js中Users导入的后面添加导入rights.vue路由
+              import Rights from '@/components/rights.vue'
+          在index.js中的routes里的children数组里的最后面添加：
+              {
+                name: 'rights',
+                path: '/rights',
+                component: Rights
+              }
+          在components文件夹中home.vue的权限列表的el-menu-item标签的index属性改为
+              index="rights"
+          总结：
+            新建组件 rights.vue -> 改路由标识 home.vue -> 配置 router
+        2)自定义面包屑组件
+          修改rights.vue中的template的标签里的内容为：
+              <template>
+                <el-card class="box">
+                  <!-- 面包屑 -->
+                  <!-- <el-breadcrumb separator-class="el-icon-arrow-right">
+                    <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+                    <el-breadcrumb-item>权限管理</el-breadcrumb-item>
+                    <el-breadcrumb-item>权限列表</el-breadcrumb-item>
+                  </el-breadcrumb> -->
+                  <!-- 目的:简化代码，希望用法 -->
+                  <cusBread level1="权限管理" level2="权限列表"></cusBread>
+                </el-card>
+              </template>
+          在style标签中的添加：
+              .box {
+                height: 100%;
+              }
+          在components文件夹中新建cusBread.vue并创建template、script、style标签，在template标签中添加:
+              <template>
+                <el-breadcrumb separator-class="el-icon-arrow-right">
+                  <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+                  <el-breadcrumb-item>{{level1}}</el-breadcrumb-item>
+                  <el-breadcrumb-item>{{level2}}</el-breadcrumb-item>
+                </el-breadcrumb> 
+              </template>
+
+              <script>
+                // 封装函数的技巧
+                // 1.把重复代码当成函数体
+                // 2.把变化的量当成函数的形参
+                export default {
+                  name: 'cusBread',
+                  data(){
+                    return {
+                      // level1: '权限管理',
+                      // level2: '权限列表'
+                    }
+                  },
+                  // level1和level2的值来源于外部,但是data的数据的值来源于自己本身
+                  // 此时，要把数据声明写在选项props
+                  // 1.props的选项
+                  // 2.props的值可以是字符串数组
+                  // 3.level1和level2的用法和data数据用法一样 -> {{level1}}
+                  // 4.props特点值来源于外部，声明了level1和level2
+                  // 5.level1和level2就是将来用组件时的标签属性 <自定义标签 level1="">
+                  // 6.level1和level2在使用组件时 赋值
+                  props: ["level1", "level2"]
+                }
+              </script>
+
+              <style>
+              </style>
+          在main.js中引入公共组件(面包屑)，在引入app组件后面引入cusBread.vue(面包屑)组件
+              import CusBread from './components/cusBread.vue'
+          在main.js中的new Vue({...})前面添加如下代码：
+              // 全局自定义组件
+              Vue.component(CusBread.name, CusBread)
+          在rights.vue中template标签修改如下：
+              <template>
+                <el-card class="box">
+                  <!-- 面包屑 -->
+                  <!-- <el-breadcrumb separator-class="el-icon-arrow-right">
+                    <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+                    <el-breadcrumb-item>权限管理</el-breadcrumb-item>
+                    <el-breadcrumb-item>权限列表</el-breadcrumb-item>
+                  </el-breadcrumb> -->
+                  <!-- 目的:简化代码，希望用法 -->
+                  <cus-bread level1="权限管理" level2="权限列表"></cus-bread>
+                </el-card>
+              </template>
+          总结：(自定义组件)
+            在公共组件中，声明 props:["数据 a"]
+            赋值: 使用组件时 <abc a="值"></abc>
+            使用 {{a}}
+              组件名字应该由本身提供,引入了组件选项 name
+          项目中的git操作：
+            git add .
+            git commit -m "自定义面包屑"
+        3)获取权限列表数据
+          在rights.vue中cus-bread标签后面添加
+              <el-button class="btn" type="primary">添加角色</el-button>
+          在style标签中添加
+              .btn {
+                margin-top: 20px;
+              }
+          将users.vue中的表格el-table标签这个复制放到rights.vue中的el-button标签后面，并修改
+              <el-table :data="list" style="width: 100%">
+                <el-table-column prop="id" label="#" width="160"></el-table-column>
+                <el-table-column prop="username" label="权限名称" width="200"></el-table-column>
+                <el-table-column prop="email" label="路径" width="200"></el-table-column>
+                <el-table-column prop="email" label="层级" width="200"></el-table-column>
+              </el-table>
+          在rights.vue中script标签中添加
+              data () {
+                return {
+                  list: []
+                }
+              }
+          在rights.vue中el-table标签中最后一个按钮中的点击事件setRights方法，在script标签中的data后面添加methods
+              methods: {
+               
+              }
+          在methods中的最开始添加获取列表的数据getTableData,读取接口文档中的1.4.1所有权限列表的文档，请求路径：rights/:type；请求方法：get
+              // 获取表格数据
+              async getTableData () {
+                // axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+                const AUTH_TOKEN = localStorage.getItem('token')
+                this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+                const res = await this.$http.get(`rights/list`)  
+                console.log(res)
+                const {meta: {status, msg}, data} = res.data
+                if (status === 200){
+                  this.list = data
+                }
+              },
+          在methods的前面添加created，具体如下：
+              created () {
+                this.getTableData()
+              },
+          修改rights.vue中的el-table中表头的prop的属性如下：
+              <el-table :data="list" style="width: 100%">
+                <el-table-column prop="id" label="#" width="160"></el-table-column>
+                <el-table-column prop="authName" label="权限名称" width="200"></el-table-column>
+                <el-table-column prop="path" label="路径" width="200"></el-table-column>
+                <el-table-column prop="level" label="层级" width="200"></el-table-column>
+              </el-table>
+          查看在element-ui中的Table表格中的序号，将#标签中的prop属性删除改成type="index"；修改层级el-table-column标签为：
+              <el-table-column label="层级" width="200">
+                <template slot-scope="scope">
+                  <span v-if="scope.row.level==='0'"> 一级 </span>
+                  <span v-if="scope.row.level==='1'"> 二级 </span>
+                  <span v-if="scope.row.level==='2'"> 三级 </span>
+                </template>
+              </el-table-column>
+          给el-table标签添加height属性是就会有滚动条，即给el-table标签添加height="450px"
+          项目中的git操作：
+              git add .
+              git commit -m "权限列表"
+          总结：
+            调整表格 -> user.vue 表格 -> 设置表格头部 -> 先设置headers头部,发送请求(token) -> 显示序号可以将属性设置为type="index" -> 层级所显示的是字符串"0"、"1"、"2" -> 使用template标签和属性slot-scope="scope"及vue的v-if 的scope.row.level的是字符串的值判断几级 -> 表格固定表头 height="固定高度 px"
+        4)axios-封装插件
+          在rights.vue和users.vue中均设置了获取首屏数据时，获取token值，设置头部，如下代码：
+              const AUTH_TOKEN = localStorage.getItem('token')
+              this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+          所以在main.js中axios.defaults.baseURL后面添加
+              // ?设置头部
+              // this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+              axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+          因为main.js中是导入的包的文件，所以将以下代码提取，(独立功能 -> js -> 模块)，在components文件中创建http.js，把axios封装成vue插件，并Vue.use(axios)使用：
+            在vue.js官网 -> 教程 -> 插件 -> 开发插件 -> 代码复制到http.js中(保留4.添加实例方法) -> 在http.js中添加并修改，将MyPlugin修改为HttpServer
+                // 让axios变成Vue插件
+                // 把axios相关代码封装成Vue的插件
+                // 结果 在mian.js可以Vue.use(axios)
+
+                import axios from 'axios'
+
+                // Vue插件
+                const HttpServer = {}
+
+                HttpServer.install = function (Vue) {
+                  // 插件要封装的功能
+                  // 独立功能 -> js -> 模块
+                  axios.defaults.baseURL = 'http://localhost:8888/api/private/v1/'
+                  // ?设置头部
+                  const AUTH_TOKEN = localStorage.getItem('token')
+                  // this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+                  axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+                  Vue.prototype.$http = axios
+
+                  // // 添加实例方法
+                  // Vue.prototype.$myMethod = function (methodOptions) {
+                  //   // 逻辑...
+                  // }
+                }
+                // MyPlugin
+                export default HttpServer
+            在main.js中使用
+              在引入moment后面引入
+                  import HTTPServer from './components/http'
+              在Vue.use(ElementUI)后面添加
+                  Vue.use(HttpServer)
+            注意：
+              axios 不是 Vue 插件,可以像用插件一样使用 axios,封装插件
+            项目中的git操作：
+              git add .
+              git commit -m "封装插件"
+        5)axios-拦截器统一设置请求头
+          查看axios中文说明中的拦截器,将http.js改为如下代码：
+              // 让axios变成Vue插件
+              // 把axios相关代码封装成Vue的插件
+              // 结果 在mian.js可以Vue.use(axios)
+
+              import axios from 'axios'
+
+              // Vue插件
+              const HttpServer = {}
+
+              HttpServer.install = function (Vue) {
+                // 插件要封装的功能
+                // 独立功能 -> js -> 模块
+                axios.defaults.baseURL = 'http://localhost:8888/api/private/v1/'
+
+                // 除了登录之外的，才需要下面2行代码
+                // 登录的响应req 和其他请求req一样
+                // 拦截 -> axios拦截请求
+                // 当请求是login，直接发送请求
+                // 当请求不是login,先加头部,然后继续发送请求
+                // 添加请求拦截器
+                axios.interceptors.request.use(function (config) {
+                  // 在发送请求之前做些什么
+                  console.log('拦截器被触发-----')
+
+                  // 1.headers请求体
+                  // 2.url 请求标识路径
+                  // console.log(config)
+                  // 当请求是login，直接发送请求
+                  // 当请求不是login,先加头部,然后继续发送请求
+                  if (config.url !== 'login'){
+                    const AUTH_TOKEN = localStorage.getItem('token')
+                    axios.defaults.headers.common['Authorization'] = AUTH_TOKEN
+                  } 
+
+                  return config;
+                }, function (error) {
+                  // 对请求错误做些什么
+                  return Promise.reject(error);
+                });
+
+                // ?设置头部
+                // const AUTH_TOKEN = localStorage.getItem('token')
+                // // this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+                // axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+                Vue.prototype.$http = axios
+
+                // // 添加实例方法
+                // Vue.prototype.$myMethod = function (methodOptions) {
+                //   // 逻辑...
+                // }
+
+              }
+              // MyPlugin
+              export default HttpServer
+          总结：
+            拦截请求:发送任何请求,会先自动来到请求拦截器,执行代码,执行完之后,继续发送
+            拦截响应
+          结果: headers 只写一次
+          项目中的git操作：
+            git add .
+            git commit -m "axios请求拦截器"
+    修改代码编辑规则在build文件夹的webpack.base.conf.js中将以下代码注释
+            ...(config.dev.useEslint ? [createLintingRule()] : []),
+        6)修改拦截器中的请求头
+          将http.js中的
+              axios.defaults.headers.common['Authorization'] = AUTH_TOKEN
+          替换为使用config的设置请求头
+              config.headers['Authorization'] = AUTH_TOKEN
+      ④.角色列表
+        1)新建组件-配置路由
+          在components文件夹中新建roles.vue，并创建template、script、style标签，并在template标签里面添加
+              <div>roles----</div>
+          在router文件夹中index.js中配置路由
+            导入组件(在index.js中的导入Rights后面导入roles.vue)
+                import Roles from '@/components/roles.vue'
+            在routes中的children里面rights后面添加
+                {
+                  name: 'roles',
+                  path: '/roles',
+                  component: Roles
+                }
+          修改标识
+            在home.vue中角色列表的el-menu-item标签中index属性修改为
+                index="roles"
+        2)面包屑和添加按钮
+          在roles.vue中的template标签的内容修改为
+              <el-card class="box">
+                <cus-bread level1="权限管理" level2="角色列表"></cus-bread>
+                <el-button class="btn" type="primary">添加角色</el-button>
+              </el-card>
+          在roles.vue中style中添加
+              .box {
+                height: 100%;
+              }
+              .btn {
+                margin-top: 20px;
+              }
+        3)获取角色列表数据
+          查看接口文档中1.5.1角色列表中的请求路径roles和请求方式get，在roles.vue中的script标签中添加created和methods，并在methods里面获取数据，在created中调用，具体如下：
+              created () {
+                this.getRoles()
+              },
+              methods: {
+                async getRoles () {
+                  const res = await this.$http.get(`roles`)
+                  // console.log(res)
+                  this.roles = res.data.data
+                  console.log(this.roles)
+                }
+              }
+          在created前面添加如下代码：
+              data () {
+                return {
+                  roles: []
+                }
+              },
+          得到的数据 -> 角色数据嵌套关系 -> 层层遍历 -> v-for
+        4)表格展示
+          将users.vue中的el-table标签的表格放在roles.vue中的el-button标签后面，并修改(将前两个按钮事件删除，将第三个事件修改为@click="showDiaSetRights(scope.row)")，具体代码如下：
+              <!-- 表格 -->
+              <el-table :data="roles" style="width: 100%">
+                <el-table-column prop="id" label="#" width="80"></el-table-column>
+                <el-table-column prop="username" label="角色名称" width="100"></el-table-column>
+                <el-table-column prop="email" label="角色描述" width="140"></el-table-column>
+                <el-table-column label="操作" width="200">
+                  <template slot-scope="scope">
+                    <el-button type="primary" icon="el-icon-edit" circle size="mini" plain></el-button>
+                    <el-button type="danger" icon="el-icon-delete" circle size="mini" plain></el-button>
+                    <el-button @click="showDiaSetRights(scope.row)" type="success" icon="el-icon-check" circle size="mini" plain></el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+          在roles.vue中methods中添加如下代码：
+              showDiaSetRights () {
+
+              },
+          在roles.vue中el-table标签中el-table-column标签的属性(type、prop、width)改为如下结构：
+              <!-- 表格 -->
+              <el-table :data="roles" style="width: 100%">
+                <el-table-column type="index" label="#" width="160"></el-table-column>
+                <el-table-column prop="roleName" label="角色名称" width="200"></el-table-column>
+                <el-table-column prop="roleDesc" label="角色描述" width="200"></el-table-column>
+                <el-table-column label="操作" width="360">
+                  <template slot-scope="scope">
+                    <el-button type="primary" icon="el-icon-edit" circle size="mini" plain></el-button>
+                    <el-button type="danger" icon="el-icon-delete" circle size="mini" plain></el-button>
+                    <el-button @click="showDiaSetRights(scope.row)" type="success" icon="el-icon-check" circle size="mini" plain></el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+          项目中的git操作：
+            git add .
+            git commit -m "角色表格布局完成"
+        5)表格展示
+          a.展开行功能分析
+            查看element-ui中Table表格的展开行 -> 支持展开(如果不能展开，1.给el-table增加一个展开的功能，2.找第三方插件，el-table表格的增强功能)
+              在roles.vue中的el-table-column标签的#前面添加如下内容：
+                  <el-table-column type="expand">
+                    <template slot-scope="scope">
+                      <!-- 写展示的内容 -->
+                      
+                    </template>
+                  </el-table-column>
+            查看element-ui中的Tag标签的可移除标签
+          b.一级权限
+            在roles.vue中的el-table-column标签的template中使用el-row和el-col控制行和列，使用span控制宽度，使用v-for循环遍历获取数据；使用el-tag标签添加标签，用type属性控制颜色；给el-row标签添加类名class="level1"如下代码：
+                <el-row class="level1" v-for="(item1, i) in scope.row.children" :key="item1.id">
+                  <el-col :span="4">
+                    <el-tag type="danger">{{item1.authName}}</el-tag>
+                  </el-col>
+                  <el-col :span="20"></el-col>
+                </el-row>
+            在style中添加
+                .level1 {
+                  margin-bottom: 10px;
+                }
+          c.二级三级权限
+            在roles.vue中的<el-col :span="20"></el-col>中添加内容(同上一步)，并给el-tag标签添加closable属性(增加"x"关闭符号)，添加图标(在element-ui中的icon图标)i标签添加类名，具体如下：
+                <!-- 写展示的内容 -->
+                <el-row class="level1" v-for="(item1, i) in scope.row.children" :key="item1.id">
+                  <el-col :span="4">
+                    <el-tag closable type="danger">{{item1.authName}}</el-tag>
+                    <i class="el-icon-arrow-right"></i>
+                  </el-col>
+                  <el-col :span="20">
+                    <el-row class="level2" v-for="(item2, i) in item1.children" :key="item2.id">
+                      <el-col :span="4">
+                        <el-tag closable type="info">{{item2.authName}}</el-tag>
+                        <i class="el-icon-arrow-right"></i>
+                      </el-col>
+                      <el-col :span="20">
+                        <el-tag closable v-for="(item3, i) in item2.children" :key="item3.id" type="warning">{{item3.authName}}</el-tag>
+                      </el-col>
+                    </el-row>
+                  </el-col>
+                </el-row>
+            项目中的git操作：
+              git add .
+              git commit -m "表格展开-三级权限"
+          d.样式调整-处理无权限
+            问题：当角色无权限时，显示空白
+            解决：当用户没有时，给予文本提示
+              在roles.vue中el-table-column标签里面的template标签的el-row后面添加如下代码：
+                  <el-row v-if="scope.row.children.length===0">
+                    <el-col>
+                      <span>未分配权限</span>
+                    </el-col>
+                  </el-row>
+          e.取消权限
+            点击"X"时消失->element-ui的Tag 标签->Events -> close
+            在el-tag标签(一级权限)中添加@close="deleRights(scope.row,item1)"，在methods中添加deleRights方法，查看接口文档->1.5.7删除角色指定权限的请求路径和请求方式，具体如下：
+                // 取消权限
+                async deleRights (role, rights) {
+                  // console.log(role)
+                  // console.log(rights)
+                  // roleId -> 角色id 
+                  // rightId -> 权限id
+                  const res = await this.$http.delete(`roles/${role.id}/rights/${rights.id}`)
+                  // console.log(res)
+                  const {meta: {msg, status}, data} = res.data
+                  if (status === 200){
+                    // 提示
+                    this.$message.success(msg)
+                    // 更新
+                    this.getRoles()
+                  }
+                },
+            给el-tag标签(二级权限)中添加@close="deleRights(scope.row,item2)"，给el-tag标签(三级权限)中添加@close="deleRights(scope.row,item3)"，
+          f.取消权限-优化
+            取消权限方法deleRights中不需要更新整个权限列表，将role.children = data替换this.getRoles()这样就只是加载局部，(因为delete 成功后,后台返回的是当前角色的剩余权限，也就是没删除的)
+            项目中的git操作：
+              git add .
+              git commit -m "取消权限"
+        6)修改权限
+          a.显示对话框
+            在roles.vue中的el-table标签后面添加对话框-分配权限，查看element-ui的Dialog 对话框的自定义内容的打开嵌套表单的Dialog的代码(el-dialog标签)复制到roles.vue中的el-table标签后面并修改数据，具体如下代码：
+                <el-dialog title="分配权限" :visible.sync="dialogFormVisible">
+                  <span>测试----</span>
+                  <div slot="footer" class="dialog-footer">
+                    <el-button @click="dialogFormVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
+                  </div>
+                </el-dialog>
+            在data中roles后面添加：
+                dialogFormVisible: false
+            在showDiaSetRights方法中添加:
+                this.dialogFormVisible = true
+          b.树形结构-文档分析
+            在element-ui中的tree树形控件的默认展开和默认选中的代码中的el-tree标签复制到roles.vue中的替换<span>测试-----</span>，修改数据treedata，在data中dialogFormVisible后面添加：
+                // 树形结构绑定的数据
+                treedata: []
+            将:default-expanded-keys的值修改为arrExpand，将:default-checked-keys的值修改为arrCheck，在data中的treedata后面添加：
+                // 默认展开的数据[被展开节点的id]
+                arrExpand: [],
+                // 默认选中的数据[被选中节点的id]
+                arrCheck: [],
+            在arrCheck后面添加：
+                // 配置选项
+                defaultProps: {
+                  // label和children值来源于树形结构绑定数据treedata中的key名,"label"
+                  label: '',
+                  children: ''
+                }
+            其中node-key:每个节点唯一标识,值来源于treedata中的key名，具体代码如下：
+                <el-tree
+                  :data="treedata"
+                  show-checkbox
+                  node-key="id"
+                  :default-expanded-keys="arrExpand"
+                  :default-checked-keys="arrCheck"
+                  :props="defaultProps">
+                </el-tree>
+          c.树形结构-配置数据
+            在接口文档-> 1.4.1所有权限列表->请求路径：rights/:type，请求方法：get
+            在打开对话框中发送请求，即showDiaSetRights方法如下：
+                // 打开对话框
+                async showDiaSetRights () {
+                  const res = await this.$http.get(`rights/tree`)
+                  console.log(res)
+                  const {meta: {msg, status}, data} = res.data
+                  if (status === 200){
+                    this.treedata = data
+                  }
+                  this.dialogFormVisible = true
+                },
+            注意：树形结构前提:res 的数据也必须是树形结构
+          d.树形结构-显示已有权限
+            让树形结构展开，即往arrExpand里面添加id,获取arrExpand的值和给el-tree标签添加default-expand-all属性的效果一样如下：
+                获取arrExpand的值(在showDiaSetRights方法中if (status === 200){...}里面的this.treedata = data后面添加)
+                    const temp = []
+                    this.treedata.forEach((item1) => {
+                      temp.push(item1.id)
+                      item1.children.forEach((item2) => {
+                        temp.push(item2.id)
+                        item2.children.forEach((item3) => {
+                          temp.push(item3.id)
+                        })
+                      })
+                    })
+                    console.log(temp)
+                    this.arrExpand = temp
+                添加el-tree标签的属性
+                    <el-tree
+                      :data="treedata"
+                      show-checkbox
+                      node-key="id"
+                      default-expand-all=""
+                      :default-checked-keys="arrCheck"
+                      :props="defaultProps">
+                    </el-tree>
+            给el-tree标签添加ref="treeDom",在showDiaSetRights方法的if (status === 200){...}里的this.treedata = data后面使用如下：
+                this.$refs.treeDom.getCheckedKeys()
+            回顾：(ref操作dom)
+              1.给要操作的标签设置ref属性值  input ref="txt"
+              2.在js代码中this.$refs.ref的值.js方法 this.$refs.txt.focus()
+          e.树形结构-显示已有权限-完善
+            在showDiaSetRights方法的if (status === 200){...}后面添加获取当前角色有的权限(接口文档->1.5.1角色列表的请求路径和方法),在methods中的showDiaSetRights方法中传实参role如下代码：
+                // 获取当前角色有的权限
+                const temp = []
+                role.children.forEach((item1) => {
+                  // temp.push(item1.id)
+                  item1.children.forEach((item2) => {
+                    // temp.push(item2.id)
+                    item2.children.forEach((item3) => {
+                      temp.push(item3.id)
+                    })
+                  })
+                })
+                console.log(temp)
+                this.arrCheck = temp
+          f.树形结构-分配权限-分析实现
+            修改分配权限->点击确定按钮 ->给el-button按钮的事件修改为@click="setRights()"，在methods中添加setRights方法，查看接口文档->1.5.6角色授权->请求路径和请求方法->请求路径roles/:roleId/rights -> data中没有roleId；方法中也没有roleId；所以在data中defaultProps后面添加如下：
+                // 当前角色id
+                currRoleId: -1
+            在showDiaSetRights方法中的最开始获取当前角色id：
+                this.currRoleId = role.id
+            这样在setRights方法中就可以使用了当前角色的id，获取路径，如下代码：
+                // 修改分配权限
+                async setRights () {
+                  // 获取全选节点id
+                  // 获取半选节点id
+                  // 默认选中 -> 全选节点 +  半选节点 -> arrCheck[全选节点id+半选节点id]
+                    // 获取树形结构中全选id -> 操作第三方组件 -> el-tree -> 组件API(属性和方法)  getCheckedKeys
+                    // 在js中调用组件标签的js方法 -> ref操作dom
+                    // 1.给要操作的页面元素设置ref="值"
+                    // 2.在js中通过this.$refs.ref的值.js的值
+
+                    // // 获取当前角色选中的节点id 
+                    const arr1 = this.$refs.treeDom.getCheckedKeys()
+                    // console.log(arr1)
+                    // // 获取树形结构中半选id
+                    // // getHalfCheckedKeys
+                    const arr2 = this.$refs.treeDom.getHalfCheckedKeys()
+                    // console.log(arr2)
+                    const arr = [...arr1, ...arr2]
+                    // roleId 当前的角色id
+                    const res = await this.$http.post(`roles/${this.currRoleId}/rights`, {
+                      rids: arr.join(',')
+                    })
+                    console.log(res)
+                    if (res.data.meta.status === 200){
+                      this.dialogFormVisible = false
+                      this.getRoles()
+                    }
+                    // console.log(this.arrCheck)
+                },
+      ⑤.首页-侧边栏-动态导航
+        (不同的角色登录之后,显示对应的菜单，比如 test 角色有的权限只有商品->test 登录时->侧边栏只显示商品)
+        在home.vue中侧边栏el-menu标签->接口文档-> 1.4.2左侧菜单权限 -> 请求方式和请求路径 -> 保留第一个用户管理的el-submenu标签，其他的去掉，在methods中添加getMenus方法，并需要在script标签中添加data，在data里面添加
+            menus: []
+        getMenus方法如下代码：
+            // 获取菜单
+            async getMenus () {
+              const res = await this.$http.get(`menus`)
+              const {meta: {status, msg}, data} = res.data
+              if (status === 200) {
+                this.menus = data
+                console.log(this.menus)
+              }
+            },
+        在methods前面添加created，调用getMenus方法如下：
+            created () {
+              this.getMenus()
+            },
+        修改el-menu标签中的代码如下：
+            <el-menu default-active="1" :router="true" :unique-opened="true">
+              <!-- 用户管理 -->
+              <el-submenu :index="item1.order+''" v-for="(item1, i) in menus" :key="item1.id">
+                <template slot="title">
+                  <i class="el-icon-location"></i>
+                  <span>{{item1.authName}}</span>
+                </template>
+                <el-menu-item :index="item2.path+''" v-for="(item2, i) in item1.children" :key="item2.id">
+                  <i class="el-icon-menu"></i>
+                  {{item2.authName}}
+                </el-menu-item>
+              </el-submenu>
+            </el-menu>
+      ⑥.不同角色用户登录-显示对应权限
+        在用户列表中添加用户-> 用户名：laowang2，密码：123456，-> 操作->角色：超级管理员，用户状态开即就是绿色 -> 在角色列表中 -> 超级管理员改为 -> 权限管理 -> 正常情况是laowang2登录能做权限管理 -> 退出重新登录 -> 只显示权限管理
+          解析：在home.vue中getMenus方法中
+              // 角色为超管 -> 超管的token -> 请求菜单
+              // admin登录 -> 主管 -> 所有权限 -> 主管的token 
+          总结：每个角色登录成功后, token 是不一样的；发送菜单请求时 后台会根据 token 值返回对应的菜单
+      ⑦.不同角色用户登录-显示对应权限-导航守卫
+        目前登录标识判断->交给拦截器去做
+        现在换一个做法:拦截所有路由标识
+        在router文件夹中的index.js，查看VueRouter文档中的导航守卫->全局前置守卫的代码复制到index.js中并修改；
+        测试：退出(没有token) -> 登录 -> 可以登录到页面/ -> 退出 -> 不能登录到页面->给提示，但是不能使用this.$message.warning('请先登录')，这里的this不是vm，所以查看element-ui中的message消息提示中的单独引用的方法，在vue-router导入后面添加import { Message } from 'element-ui'，在导航守卫中使用，最终index.js中的代码如下：
+            import Vue from 'vue'
+            import Router from 'vue-router'
+            import { Message } from 'element-ui'
+            // import Login from '../components/login.vue'
+            // webpack项目模板 提供@表示src文件夹->自动找到src文件夹
+            import Login from '@/components/login.vue'
+            import Home from '@/components/home.vue'
+            import Users from '@/components/users.vue'
+            import Rights from '@/components/rights.vue'
+            import Roles from '@/components/roles.vue'
+
+            Vue.use(Router)
+
+            const router = new Router({
+              routes: [{
+                name: 'home',
+                path: '/',
+                component: Home,
+                children: [{
+                  name: 'users',
+                  path: '/users',
+                  component: Users
+                }, {
+                  name: 'rights',
+                  path: '/rights',
+                  component: Rights
+                }, {
+                  name: 'roles',
+                  path: '/roles',
+                  component: Roles
+                }]
+              }, {
+                // 当标识是login时 -> 让下面的配置生效
+                // 在配置生效前，处理路由标识看是不是login -> 在路由模块中处理
+                name: 'login',
+                path: '/login',
+                component: Login
+              }]
+            })
+
+            // 路由导航守卫(保安)
+            // 在路由配置生效前，代码会自动来到下面位置
+            // to 要去的路由配置对象
+            // from 当前的路由配置对象
+            // next方法：让路由配置继续生效
+            router.beforeEach((to, from, next) => {
+              console.log('路由守卫执行----')
+              // ...
+              // console.log(to,from)
+
+              // 如果要去的是登录 -> 继续登录
+              if (to.name === 'login'){
+                next()
+              } else {
+                // 如果要去的不是登录 ->
+                const token = localStorage.getItem('token')
+                //  if !token  -> 渲染login
+                if (!token) {
+                  // 提示
+                  // this.$message.warning('请先登录')
+                  Message.warning('请先登录')
+                  router.push({
+                    name: 'login'
+                  })
+                  return
+                }
+                //  if token 渲染home
+                next()
+              }
+
+              // next()
+            })
+            export default router
+        注意:
+          to->要去的路由配置
+          from->当前路由配置
+          next 方法 next()继续让路由配置生效
+        将home.vue中的beforeMount方法里的删除
+        项目中的git操作：
+          git add .
+          git commit -m "路由的守卫"
+    c.商品管理
+      ①.新建分支
+        项目中的git操作：
+          git  status
+          git branch
+            => 显示 * dev-rights dev-home dev-login dev-users master
+          git checkout master
+          git merge dev-rights
+          git push
+          git branch
+            => 显示 * master dev-rights dev-home dev-login dev-users 
+          git checkout -b dev-goods
+      ②.商品列表
+        1)整理代码
+          在components文件夹中新建goodslist.vue，并创建基本结构(就是vue后台管理项目素材文件夹中的goodslist.vue文件的代码)
+          修改步骤：
+            1.面包屑名字改好
+            2.loading 相关代码删掉
+            3.过滤器的名字 fmtdate 实参删除
+        2)添加商品
+          01-新建组件-配置路由
+            在index.js中引入Roles后面添加引入goodslist.vue：
+                import Goodslist from '@/components/goodslist.vue'
+            在routes中的roles后面添加：
+                {
+                  name: 'goods',
+                  path: '/goods',
+                  component: Goodslist
+                }
+            注意：路由 path 不能随便写!(因为侧边栏的路由时后台返回的)
+          02-步骤条
+            a.新建组件
+              在components文件夹中新建goodsadd.vue，并搭建基本结构
+            b.配置路由
+              在index.js中引入Goodslist后面添加引入goodsadd.vue
+                  import Goodsadd from '@/components/goodsadd.vue'
+              在routes中的goods的后面添加：
+                  {
+                    name: 'goodsadd',
+                    path: '/goodsadd',
+                    component: Goodsadd
+                  }
+            c.添加组件
+              在goodsadd.vue中的template标签中添加卡片、面包屑、element-ui中的Alert 警告的文字居中el-alert标签代码复制并修改样式和文字等、element-ui中的Steps 步骤条的居中的步骤条中el-step标签代码复制并修改，在script中添加data，并在data里面添加active: '1'，template代码如下：
+                  <!-- 卡片 -->
+                  <el-card class="box">
+                    <!-- 面包屑 -->
+                    <cus-bread level1="商品管理" level2="商品列表"></cus-bread>
+                    <el-alert class="alert" title="添加商品信息" type="info" center show-icon :closable="false"></el-alert>
+                    <!-- 横向:步骤条 -->
+                    <el-steps :active="active*1" align-center>
+                      <el-step title="基本信息"></el-step>
+                      <el-step title="商品参数"></el-step>
+                      <el-step title="商品属性"></el-step>
+                      <el-step title="商品图片"></el-step>
+                      <el-step title="商品内容"></el-step>
+                    </el-steps>
+                  </el-card>
+              script代码如下：
+                  export default {
+                    data () {
+                      return {
+                        active: '1'
+                      }
+                    }
+                  }
+              style标签中的代码如下：
+                  .box {
+                    height: 100%;
+                  }
+                  .alert {
+                    margin-top: 20px;
+                    margin-bottom: 20px;
+                  }
+              注意：:active 属性控制当前是第几步
+          03-tabs 标签
+            在element-ui的Tabs标签页的位置中的el-tabs标签内容复制到goodsadd.vue中并修改，代码如下：
+                <!-- 标签页 tabs -->
+                <el-tabs v-model="active" tab-position="left">
+                  <el-tab-pane label="基本信息" name="1">基本信息</el-tab-pane>
+                  <el-tab-pane label="商品参数" name="2">商品参数</el-tab-pane>
+                  <el-tab-pane label="商品属性" name="3">商品属性</el-tab-pane>
+                  <el-tab-pane label="商品图片" name="4">商品图片</el-tab-pane>
+                  <el-tab-pane label="商品内容" name="5">商品内容</el-tab-pane>
+                </el-tabs>
+            注意: el-tabs 和 el-steps 共享了一个 active，即el-tabs v-model="里层 el-tab-pane 的 name 属性值"
+            总结：el-steps标签里的active和el-tabs标签的里v-model的值都是去data中的active，而v-model具有双向绑定的功能，这样就会联动了
+        3)基本信息
+          01-绑定表单数据
+            整个tabs切换是一个表单，所以查看element-ui中form表单的对齐方式中的el-form标签，只把el-form标签复制到goodsadd.vue的el-tabs标签的外面，根据element-ui中form表单的对齐方式的代码修改el-tabs中的代码，在el-form标签中添加:model="form"，所以在data中添加
+                form: {
+                }
+            在接口文档1.8.2添加商品的请求参数的参数名放在data中的form中
+                form: {
+                  goods_name: '',
+                  goods_cat: '',
+                  goods_price: '',
+                  goods_number: '',
+                  goods_weight: '',
+                  goods_introduce: '',
+                  pics: '',
+                  attrs: ''
+                }
+            在goodsadd.vue中的el-steps标签后面的代码如下：
+                <el-form label-position="top" label-width="80px" :model="form">
+                  <!-- <el-form-item label="名称">
+                    <el-input v-model="formLabelAlign.name"></el-input>
+                  </el-form-item> -->
+                  
+                  <!-- 标签页 tabs -->
+                  <el-tabs v-model="active" tab-position="left">
+                    <el-tab-pane label="基本信息" name="1">
+                      <el-form-item label="商品名称">
+                        <el-input v-model="form.goods_name"></el-input>
+                      </el-form-item>
+                    </el-tab-pane>
+                    <el-tab-pane label="商品参数" name="2">商品参数</el-tab-pane>
+                    <el-tab-pane label="商品属性" name="3">商品属性</el-tab-pane>
+                    <el-tab-pane label="商品图片" name="4">商品图片</el-tab-pane>
+                    <el-tab-pane label="商品内容" name="5">商品内容</el-tab-pane>
+                  </el-tabs>
+                </el-form>
+          02-级联选择器-文档-引入
+            在goodsadd.vue中el-tab-pane标签的基本信息里的el-form-item标签复制多个到el-form-item后面，并给el-form标签添加class="form"，在style中添加：
+                .form {
+                  height: 400px;
+                  overflow: auto;
+                }
+            在element-ui中的Cascader 级联选择器的基础用法的hover 触发子菜单的el-cascader标签复制到商品分类的el-form-item标签里替换到里面的el-input标签，在data中添加：
+                // 级联配置的数据
+                options:[],
+                value:[]
+            在data后面添加methods如下：
+                methods:{
+                  handleChange () {
+
+                  }
+                }
+            将el-cascader标签的:props属性的值改为defaultProp，并在data中添加：
+                defaultProp: {
+                  expandTrigger: 'hover',
+                  label: '',
+                  value: '',
+                  children: ''
+                }
+            最后基本信息的标签el-tab-pane里面的最后面的代码如下：
+                <el-form-item label="商品分类">
+                  <el-input v-model="form.goods_cat"></el-input>
+                  <el-cascader
+                    v-model="value"
+                    :options="options"
+                    :props="defaultProp"
+                    @change="handleChange"></el-cascader>
+                </el-form-item>
+            总结： options 数据源； selectedOptions[] 可以给默认值,当选择 label 时,[被选择的 label 的 value 中]；props 配置选项 label/value/children->来源于 options 数据源 key 名
+          03-级联选择器-获取分类数据
+            在goodsadd.vue中的methods中添加获取三级分类的数据getGoodsCate的方法-> 查看接口文档1.6.1商品数据列表-> 请求路径、请求方式、请求参数(在路径后面加'?type=3')
+                // 获取三级分类的数据
+                async getGoodsCate(){
+                  // type的值[1,2,3]
+                  const res = await this.$http.get(`categories?type=3`)
+                  const {meta: {status, msg}, data} = res.data
+                  if (status === 200){
+                    this.options = data
+                    console.log(this.options)
+                  }
+                },
+            在methods前面添加created并调用getGoodsCate方法：
+                created(){
+                  this.getGoodsCate()
+                },
+            根据请求得到的数据，修改data中的数据defaultProp值，如下：
+                defaultProp: {
+                  expandTrigger: 'hover',
+                  label: 'cat_name',
+                  value: 'cat_id',
+                  children: 'children'
+                }
+            在el-cascader标签前面添加{{value}}，查看页面选择级联选择器后得到[1,3,6]，所以在data中给value设置默认值:
+                value:[1,3,6],
+            查看element-ui的Cascader 级联选择器的清空clearable，在el-cascader标签里添加clearable属性，
+            注意：当选某个 label 时,该 label 的 value 值 cat_id 会[这里]
+          04-级联选择器-配置数据
+            cat_pid 父级 cat_id(一级分类的 cat_pid=0)
+            cat_level(0,1,2)->一二三级
+            defaultProp:{}是有默认值的 比如 label 的默认值 label 等，所以data中的defaultProp的children可以去掉
+        4)商品参数
+          01-获取动态参数数据
+            查看接口文档-> 1.7.1参数列表 -> 请求路径、请求方式、请求参数
+            查看element-ui的Tabs 标签页的事件tab-click事件，在goodsadd.vue中的el-tabs标签里添加@tab-click="changeTab()",在methods中添加changeTab方法，
+                // 点击任何Tab触发
+                async changeTab(){
+                  // 如果点击第二个
+                  // 如果分类是三级
+                  if(this.active === '2'){
+                    if (this.value.length !== 3){
+                      // 提示
+                      this.$message.error('请先选择三级分类')
+                      return
+                    }
+                    // 获取动态数据
+                    const res = await this.$http.get(`categories/${this.value[2]}/attributes?sel=many`)
+                    console.log(res)
+                    const {meta: {status, msg}, data} = res.data
+                    if (status === 200) {
+                      this.arrDy = data
+                      console.log(this.arrDy)
+                    }
+                  }
+                },
+            在data中添加：
+                // 动态参数的数组
+                arrDy:[]
+            总结： 商品参数 tab->动态参数数据
+                  如果 tab 是第二个并且是三级分类->获取动态参数数据
+                  this.arrDy->(attr_name/attr_id/attr_vals 是字符串)
+          02-复选框组-文档-引入
+            在element-ui中的Checkbox 多选框的多选框组代码的el-checkbox-group标签复制到goodsadd.vue中的商品参数的el-tab-pane标签里在el-checkbox-gtoup标签是表单所以在el-checkbox-group标签外面放el-form-item标签，代码如下：
+                <el-tab-pane label="商品参数" name="2">
+                  <el-form-item label="商品参数">
+                    <!-- {{checkList}} -->
+                    <el-checkbox-group v-model="checkList">
+                      <el-checkbox label="复选框 A"></el-checkbox>
+                      <el-checkbox label="复选框 B"></el-checkbox>
+                      <el-checkbox label="复选框 C"></el-checkbox>
+                    </el-checkbox-group>
+                  </el-form-item>
+                </el-tab-pane>
+            在data中添加：
+                checkList: []
+          03-调整样式-默认全选中
+            在goodsadd.vue中的商品参数的el-form-item标签添加v-for="(item1, i) in arrDy" :key="item1.attr_id",并修改label属性值为:label="item1.attr_name" ；给el-checkbox标签添加 v-for="(item2, i) in item1.attr_vals" :key="i"，并修改label属性值为:label="item2"，得到的item2是一个一个的字符串，因为arrDy.attr_vals是字符串，所以在changeTab方法中的this.arrDy=data得到数据后处理数据，如下：
+                // 处理this.arrDy中的每个元素的attr_vals
+                this.arrDy.forEach(item => {
+                  // trim方法是去掉字符串中的空格
+                  item.attr_vals = item.attr_vals.trim().split(',')
+                  console.log(item.attr_vals)
+                })
+            其中：trim方法是去掉字符串中的空格
+            处理边框的问题<- element-ui中的带有边框代码里的border放在el-checkbox标签中
+            处理全选中的问题<- el-checkbox-group标签中的v-model的值就是权限，所以改为v-model="item1.attr_vals"，之前data中的checkList:[]可以删掉了，基本信息的el-tab-pane标签后面代码如下：
+                <el-tab-pane label="商品参数" name="2">
+                  <el-form-item :label="item1.attr_name" v-for="(item1, i) in arrDy" :key="item1.attr_id">
+                    <!-- {{checkList}} -->
+                    <el-checkbox-group v-model="item1.attr_vals">
+                      <el-checkbox border :label="item2" v-for="(item2, i) in item1.attr_vals" :key="i"></el-checkbox>
+                    </el-checkbox-group>
+                  </el-form-item>
+                </el-tab-pane>
+            如果item1.attr_vals的值为""，所以修改changeTab方法中的this.arrDy=data后面的代码如下：
+                // 处理this.arrDy中的每个元素的attr_vals
+                this.arrDy.forEach(item => {
+                  // length === 0
+                  // length !== 0
+                  // if(item.attr_vals.trim().length === 0){
+                  //   item.attr_vals = []
+                  // } else {
+                  //   // trim方法是去掉字符串中的空格
+                  //   item.attr_vals = item.attr_vals.trim().split(',')
+                  //   console.log(item.attr_vals)
+                  // }
+                  item.attr_vals = item.attr_vals.trim().length === 0 ? [] : item.attr_vals.trim().split(',')
+                })
+        5)商品属性
+          01-获取静态参数数据
+            (点击第三个 tab&&三级分类->获取静态数据(商品属性))
+            点击tab切换到商品属性，所以修改changeTab方法，在data中添加
+                // 静态参数的数组
+                arrStatic:[],
+            changeTab方法修改后：
+                // 点击任何Tab触发
+                async changeTab(){
+                  // 如果点击第二个
+                  // 如果分类是三级
+                  if(this.active === '2' || this.active === '3'){
+                    if (this.value.length !== 3){
+                      // 提示
+                      this.$message.error('请先选择三级分类')
+                      return
+                    }
+                    if (this.active === '2') {
+                      // 获取动态数据
+                      const res = await this.$http.get(`categories/${this.value[2]}/attributes?sel=many`)
+                      // console.log(res)
+                      const {meta: {status, msg}, data} = res.data
+                      if (status === 200) {
+                        this.arrDy = data
+                        console.log('动态数据----')
+                        // 处理this.arrDy中的每个元素的attr_vals
+                        this.arrDy.forEach(item => {
+                          // length === 0
+                          // length !== 0
+                          // if(item.attr_vals.trim().length === 0){
+                          //   item.attr_vals = []
+                          // } else {
+                          //   // trim方法是去掉字符串中的空格
+                          //   item.attr_vals = item.attr_vals.trim().split(',')
+                          //   console.log(item.attr_vals)
+                          // }
+                          item.attr_vals = item.attr_vals.trim().length === 0 ? [] : item.attr_vals.trim().split(',')
+                        })
+                        // console.log(this.arrDy)
+                      }
+                    }
+                    if (this.active === '3') {
+                      // 获取静态数据
+                      const res = await this.$http.get(`categories/${this.value[2]}/attributes?sel=only`)
+                      // console.log(res)
+                      const {meta: {status, msg}, data} = res.data
+                      if (status === 200) {
+                        this.arrStatic = data
+                        console.log('静态数据----')
+                        console.log(this.arrStatic)
+                      }
+                    }
+                  }
+                },
+            项目中的git操作：
+              git add .
+              git commit -m "获取静态参数"
+          02-布局
+            在goodsadd.vue中的商品名称的el-form-item标签复制一份放到商品属性的el-tab-pane标签中修改，代码如下：
+                // 商品属性(静态参数)
+                <el-tab-pane label="商品属性" name="3">
+                  <el-form-item :label="item.attr_name" v-for="(item, i) in arrStatic" :key="item.attr_id">
+                    <el-input v-model="item.attr_vals"></el-input>
+                  </el-form-item>
+                </el-tab-pane>
+        6)商品图片
+          01-图片上传-文档-引入
+            第4个tab和前3个tab不同，因为第2个和第3个都是三级分类，而第4个tab只要是点击tab就会到商品图片的部分
+            在商品图片的el-tab-pane标签里面添加
+                <el-form-item label="添加图片">
+                </el-form-item>
+            查看element-ui的Upload 上传的图片列表缩略图代码el-upload标签复制到商品图片的el-tab-pane标签里面的el-form-item标签里删除并添加如下：
+                <el-tab-pane label="商品图片" name="4">
+                  <el-form-item label="添加图片">
+                    <!-- header设置请求头 -->
+                    <el-upload
+                      action="https://jsonplaceholder.typicode.com/posts/"
+                      :on-remove="handleRemove"
+                      :on-success="handleSuccess"
+                      list-type="picture">
+                      <el-button size="small" type="primary">点击上传</el-button>
+                    </el-upload>
+                  </el-form-item>
+                </el-tab-pane>
+          02-图片上传-配置属性
+            查看接口文档 -> 1.9图片上传的请求路径和1.1API V1接口文档的接口基准地址，所以在goodsadd.vue中el-upload标签的action的值改为'http://localhost:8888/api/private/v1/upload'，并添加请求头:headers="headers"，具体代码如下：  
+                <el-tab-pane label="商品图片" name="4">
+                  <el-form-item label="添加图片">
+                    <!-- header设置请求头 -->
+                    <!-- 
+                      action="upload"
+                      如果可以的话? -> this.$http.get('roles') -> 设置axios请求baseURL -> 不可以
+                      1.必须全路径(之前baseURL -> axios请求)
+                      2.必须授权(之前axios的API设置的headers)
+                    -->
+                    <el-upload
+                      :headers="headers"
+                      action="http://localhost:8888/api/private/v1/upload"
+                      :on-remove="handleRemove"
+                      :on-success="handleSuccess"
+                      list-type="picture">
+                      <el-button size="small" type="primary">点击上传</el-button>
+                    </el-upload>
+                  </el-form-item>
+                </el-tab-pane>
+            在data中添加：
+                headers: {
+                  Authorization:localStorage.getItem('token')
+                }
+            在methods中添加：
+                // 移除X
+                handleRemove(file, fileList){
+                  console.log('Remove---------')
+                  console.log(file)
+                  // 图片上传的临时路径 -> 在api-server/tmp_uploads临时路径
+                  // file.response.data.tmp_path
+                },
+                // 假设上传成功
+                handleSuccess(res, file, fileList){
+                  console.log('Success-----')
+
+                  console.log(res)
+                  // 图片上传的临时路径 -> 在api-server/tmp_uploads临时路径
+                  // res.data.data.tmp_path
+                },
+            项目中的git操作：
+              git add .
+              git commit -m "图片上传"
+        7)商品内容
+          01-富文本编辑器
+            在商品内容的el-tab-pane标签里面添加按钮和表单如下：
+                <el-tab-pane label="商品内容" name="5">
+                  <el-form-item>
+                    <el-button @click="addGoods()">添加商品</el-button>
+                  </el-form-item>
+                </el-tab-pane>
+            在methods中添加
+                // 添加商品
+                addGoods(){
+
+                },
+            处理富文本的问题
+            在vue.js中资源列表的Awesome Vue -> 富文本 -> vue -quill -editor -> 在npmjs.com中查找 -> https://www.npmjs.com/package/vue-quill-editor
+            安装：npm install vue-quill-editor --save
+            挂载：(可以使用局部)
+              在goodsadd.vue中scrript标签中的最开始导入，如下：
+                  import 'quill/dist/quill.core.css'
+                  import 'quill/dist/quill.snow.css'
+                  import 'quill/dist/quill.bubble.css'
+                  import { quillEditor } from 'vue-quill-editor'
+            组成组件
+              在goodsadd.vue中script标签的export default {}中最开始添加：
+                  components: {
+                    quillEditor
+                  }
+            使用：
+              在商品内容的el-tab-pane标签里面的el-button标签的后面添加富文本
+                  <quill-editor></quill-editor>
+            注意：如果出现报错重启vue，npm run dev
+            给quill-editor标签添加class="quill"，在style标签中添加：
+                .quill {
+                  height: 200px;
+                }
+            没有生效，修改样式：
+                .quill {
+                  min-height: 200px;
+                }
+            没有生效，在控制台找到，直接给类名添加样式：
+                .ql-editor, .ql-blank {
+                  min-height: 200px;
+                }
+            注意：SSR(服务端渲染)
+            扩展: Vue 客户端项目 -> SPA -> 不利于 SEO -> SSR -> Nuxt.js
+          02-表单数据分析
+            问题：
+              在http://localhost:8080/#/goodsadd页面的基本信息中商品分类选择三级分类后清空选项后，tab商品参数仍然有数据；
+            解决：
+              在goodsadd.vue中的changeTab方法中的if(this.active === '2' || this.active === '3'){...}里的if (this.value.length !== 3){..}里面的this.$message.error('请先选择三级分类')后面添加如下代码：
+                  // 清空
+                  if (this.active === '2') {
+                    this.arrDy = []
+                  } else {
+                    this.arrStatic = []
+                  }
+            处理:在商品内容中添加商品发送请求->接口文档-> 1.8.2添加商品，在method中的addGoods的方法修改为：
+                // 添加商品
+                async addGoods(){
+                  // 发送请求
+                  const res = await this.$http.post(`goods`, this.form)
+                  console.log(res)
+                },
+            测试代码出现失败，没有data，meta中的msg提示商品没有设置所属分类，查看data中的form对象的键和值，所以在商品内容中的富文本标签quill-editor标签里面添加:
+                v-model="form.goods_introduce"
+            pics的理解:
+                // pics 上传的图片临时路径(对象) 可以为空
+                // 1. pics: {tmp_path: 临时路径}
+                // 2. pics: [{tmp_path: 临时路径}]
+                // {pic: ?}
+            所以data中的form的pics改为：
+                pics: []
+            根据文档 -> 1.8.2添加商品的请求参数的attrs将data中的attrs修改为:
+                attrs: []
+            待解决问题：
+                // goods_cat  以为','分割的分类列表[1,3,6]	不能为空
+                // pics 上传的图片临时路径(对象) 可以为空
+                // attrs 商品的参数(数组) 可以为空 [{attr_id:?,attr_value:?}]来源于arrDy和arrStatic
+          03-表单数据处理-分类和图片
+            在addGoods方法中处理data的form的goods_cat、pics、attrs数据，在addGoods方法中处理goods_cat：
+                // 添加商品
+                async addGoods(){
+                  // goods_cat  以为','分割的分类列表[1,3,6]	不能为空
+                  this.form.goods_cat = this.value.join(',')
+                  // pics 上传的图片临时路径(对象) 可以为空
+                  // attrs 商品的参数(数组) 可以为空 [{attr_id:?,attr_value:?}]来源于arrDy和arrStatic
+
+                  // // 发送请求
+                  // const res = await this.$http.post(`goods`, this.form)
+                  // console.log(res)
+
+                },
+            在handleSuccess方法中处理pics的添加：
+                // 假设上传成功
+                handleSuccess(res, file, fileList){
+                  // console.log('Success-----')
+
+                  // console.log(res)
+                  // 图片上传的临时路径 -> 在api-server/tmp_uploads临时路径
+                  // res.data.tmp_path
+                  this.form.pics.push({
+                    pic: res.data.tmp_path
+                  })
+                  console.log(this.form.pics)
+                },
+            在handleRemove方法中处理pics的移除：
+                // 移除X
+                handleRemove(file, fileList){
+                  // console.log('Remove---------')
+                  // console.log(file)
+                  // 图片上传的临时路径 -> 在api-server/tmp_uploads临时路径
+                  // file.response.data.tmp_path
+                  // [a, b, c]
+                  // const Index = ?
+                  // 1.找数组中符合条件的索引
+                  // 2.条件 -> 当前选中的图片tem_path和数组中某个元素的{pic:}的路径一样
+                  // 3.返回索引
+
+                  // 1.遍历 + 2.返回索引 + 3.写条件
+                  const Index = this.form.pics.map(item => {
+                    return item.pic === file.response.data.tmp_path
+                  })
+
+                  this.form.pics.splice(Index, 1)
+                  console.log(this.form.pics)
+
+                },
+            测试：商品图片中上传3张图片后，添加和移除
+          04-表单数据处理-attrs
+            在goodsadd.vue中的addGoods方法中处理attrs的数据就是静态数据arrStatic和动态数据arrDy，具体代码如下：
+                // 添加商品
+                async addGoods(){
+                  // goods_cat  以为','分割的分类列表[1,3,6]	不能为空
+                  this.form.goods_cat = this.value.join(',')
+                  // pics 上传的图片临时路径(对象) 可以为空
+                  // this.pics
+                  // attrs 商品的参数(数组) 可以为空 [{attr_id:?,attr_value:?}]来源于arrDy和arrStatic
+
+                  // 处理动态
+                  // 1.遍历
+                  // 2.return 
+                  // 返回值
+                  const obj1 = {attr_id: '', attr_vals: ''}
+                  const arr1 = []
+                  this.arrDy.forEach(item => {
+                    obj1.attr_id = item.attr_id
+                    obj1.attr_value = item.attr_vals
+                    arr1.push(obj1)
+                  })
+                  // 处理静态
+                  const obj2 = {attr_id: '', attr_vals: ''}
+                  const arr2 = []
+                  this.arrStatic.forEach(item => {
+                    obj2.attr_id = item.attr_id
+                    obj2.attr_value = item.attr_vals
+                    arr2.push(obj2)
+                  })
+                  console.log(arr1)
+                  console.log(arr2)
+
+                  this.form.attrs = [...arr1, ...arr2]
+                  console.log(this.form)
+
+                  // // 发送请求
+                  // const res = await this.$http.post(`goods`, this.form)
+                  // console.log(res)
+
+                },
+          05-发送请求-回到商品列表页
+            将上一步的addGoods方法修改处理动态数据和静态数的方法，并发送请求如下：
+              // 添加商品
+              async addGoods(){
+                // goods_cat  以为','分割的分类列表[1,3,6]	不能为空
+                this.form.goods_cat = this.value.join(',')
+                // pics 上传的图片临时路径(对象) 可以为空
+                // this.pics
+                // attrs 商品的参数(数组) 可以为空 [{attr_id:?,attr_value:?}]来源于arrDy和arrStatic
+
+                // 处理动态
+                // 1.遍历
+                // 2.return 
+                // 返回值
+
+                const arr1 = this.arrDy.map(item => {
+                  return {attr_id:item.attr_id,attr_value: item.attr_vals}
+                })
+                const arr2 = this.arrStatic.map(item => {
+                  return {attr_id:item.attr_id,attr_value: item.attr_vals}
+                })
+
+                // const obj1 = {attr_id: '', attr_vals: ''}
+                // const arr1 = []
+                // this.arrDy.forEach(item => {
+                //   obj1.attr_id = item.attr_id
+                //   obj1.attr_value = item.attr_vals
+                //   arr1.push(obj1)
+                // })
+                // // 处理静态
+                // const obj2 = {attr_id: '', attr_vals: ''}
+                // const arr2 = []
+                // this.arrStatic.forEach(item => {
+                //   obj2.attr_id = item.attr_id
+                //   obj2.attr_value = item.attr_vals
+                //   arr2.push(obj2)
+                // })
+                // console.log(arr1)
+                // console.log(arr2)
+
+                this.form.attrs = [...arr1, ...arr2]
+                console.log(this.form)
+
+                // // 发送请求
+                const res = await this.$http.post(`goods`, this.form)
+                console.log(res)
+                const {meta: {msg, status}, data} = res.data
+                if (status === 201){
+                  // 列表
+                  this.$router.push({
+                    name: 'goods'
+                  })
+                } else {
+                  this.$message.error(msg)
+                }
+              },
+            在handleRemove方法中修改查找索引(使用了ES6的方法)的方法修改为：
+                // 移除X
+                handleRemove(file, fileList){
+                  // console.log('Remove---------')
+                  // console.log(file)
+                  // 图片上传的临时路径 -> 在api-server/tmp_uploads临时路径
+                  // file.response.data.tmp_path
+                  // [a, b, c]
+                  // const Index = ?
+                  // 1.找数组中符合条件的索引
+                  // 2.条件 -> 当前选中的图片tem_path和数组中某个元素的{pic:}的路径一样
+                  // 3.返回索引
+
+                  // 1.遍历 + 2.返回索引 + 3.写条件
+                  // 找下标 findIndex(ES6)
+                  const Index = this.form.pics.findIndex(item => {
+                    return item.pic === file.response.data.tmp_path
+                  })
+                  // const Index = this.form.pics.map(item => {
+                  //   return item.pic === file.response.data.tmp_path
+                  // })
+
+                  this.form.pics.splice(Index, 1)
+                  // console.log(this.form.pics)
+
+                },
+            项目中的git操作：
+              git add .
+              git commit -m "添加商品"
+              (git checkout master
+              git merge dev-goods
+              git push
+              )
+      ③.分类参数
+
+
+
+
+
+
