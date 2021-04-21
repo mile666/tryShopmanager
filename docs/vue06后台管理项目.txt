@@ -251,6 +251,7 @@
         git checkout dev-login
         git branch
     b.引入表单组件
+      页面中使用element-ui插件时，将需要的框架复制到.vue文件中并调整结构和样式。
       ①.根据展示效果，整理页面
         在element-ui中找到form表单中对齐方式的代码<el-form></el-form>复制到login.vue的template的div中(为了调节样式)，并给div添加class="login-wrap"，将el-form标签中的:label-position的值改为label-position="top"，:model属性改为formdata；在export default{}中添加如下：
             data () {
