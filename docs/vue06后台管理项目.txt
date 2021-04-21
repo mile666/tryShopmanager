@@ -136,41 +136,42 @@
     i.使用git
       首先在github网页账户中创建新项目的名字
       ①.版本控制
-        第一次使用git
-          // 初始化
-          git init 
-          // 将工作区 放在 暂存区
-          git add .
-          // 将暂存区 放在 本地仓库
-          git commit -m "初始化项目"
-          // 新建远程仓库->关联仓库
-          ....
-          // 推送
-          git push -u origin master
-        完成一个小功能,提交/推送代码
-          git add .
-          git commit -m "注释"
-          git push
-        
-        git工具 -> gitbash -> git指令操作-> 任何cmd执行git指令->git是无效指令-> 配置windows系统的环境变量
-        如何配置git的环境变量：
-          1. 找到git安装位置
-          2.修改计算技属性->path全局变量
-        注意: 如果不想改全局path , 可以在gitbash中使用git
-        项目中操作步骤：
-          git  init 
-          git status
-          git add .
-          git status
-          git commit -m "初始化项目"
-          在github官网中点击 "+" -> 点击New reponsitory 
-          添加Repository name -> shopmanager(和项目一个名字) -> 点击 Create repository
-          git remote add origin https://github.com/mile666/shopmanager.git
-          git push -u origin master
-          (有可能需要输入用户名，弹框的形式的密码)
-          注意：
-            每完成一个小功能 提交commit一次
-            每完成大功能 push一次
+        使用：
+          第一次使用git
+            // 初始化
+            git init 
+            // 将工作区 放在 暂存区
+            git add .
+            // 将暂存区 放在 本地仓库
+            git commit -m "初始化项目"
+            // 新建远程仓库->关联仓库(git remote add origin https://github.com/mile666/tryShopmanager.git)
+            ....
+            // 推送
+            git push -u origin master
+          完成一个小功能,提交/推送代码
+            git add .
+            git commit -m "注释"
+            git push
+        操作:
+          git工具 -> gitbash -> git指令操作-> 任何cmd执行git指令->git是无效指令-> 配置windows系统的环境变量
+          如何配置git的环境变量：
+            1. 找到git安装位置
+            2.修改计算技属性->path全局变量
+          注意: 如果不想改全局path , 可以在gitbash中使用git
+          项目中操作步骤：
+            git  init 
+            git status
+            git add .
+            git status
+            git commit -m "初始化项目"
+            在github官网中点击 "+" -> 点击New reponsitory 
+            添加Repository name -> shopmanager(和项目一个名字) -> 点击 Create repository
+            git remote add origin https://github.com/mile666/shopmanager.git
+            git push -u origin master
+            (有可能需要输入用户名，弹框的形式的密码)
+            注意：
+              每完成一个小功能 提交commit一次
+              每完成大功能 push一次
       ②.分支管理
         管理代码-> 合并代码
         项目3个人-> 区分代码是谁写的?->新建分支
@@ -199,29 +200,30 @@
           => 显示  * dev-login  master  表示：有两个分支即dev-login和master 当前分支是dev-login
   2.登录
     a.新建分支-login 组件-配置路由
-      ①.在src文件夹的components文件夹中新建login.vue,并添加template、script、style标准结构，在template标签中添加<div>login---</div>
-      在router文件夹的index.js中引入vue-router的后面添加引入login.vue，如：
-          // import Login from '../components/login.vue'
-          // webpack项目模板 提供@表示src文件夹->自动找到src文件夹
-          import Login from '@/components/login.vue'
-      整理index.js中的routes为：
-          routes: [
+      步骤：创建登录组件，并将登录组件连接登录路由
+        ①.在src文件夹的components文件夹中新建login.vue,并添加template、script、style标准结构(vscode中的sca，即scaffold按tab)，在template标签中添加<div>login---</div>
+        在router文件夹的index.js中引入vue-router的后面添加引入login.vue，如：
+            // import Login from '../components/login.vue'
+            // webpack项目模板 提供@表示src文件夹->自动找到src文件夹
+            import Login from '@/components/login.vue'
+        整理index.js中的routes为：
+            routes: [
+              {
+                name: 'login',
+                path: '/login',
+                component: Login
+              }
+            ]
+        ②.在components文件夹中新建home.vue，在template标签中添加<div> home---</div>
+        在router文件夹的index.js中引入Login的后面添加引入home.vue，如：
+            import Home from '@/components/home.vue'
+        在index.js中配置路由，在routes中login前面添加，如下：
             {
-              name: 'login',
-              path: '/login',
-              component: Login
+              name: 'home',
+              path: '/',
+              component: Home
             }
-          ]
-      ②.在components文件夹中新建home.vue，在template标签中添加<div> home---</div>
-      在router文件夹的index.js中引入Login的后面添加引入home.vue，如：
-          import Home from '@/components/home.vue'
-      在index.js中配置路由，在routes中login前面添加，如下：
-          {
-            name: 'home',
-            path: '/',
-            component: Home
-          }
-      ③.项目中的git操作：
+        ③.项目中的git操作：
         // 查看状态
         git status
         // 将工作区 放在 暂存区
