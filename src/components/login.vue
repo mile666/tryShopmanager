@@ -24,26 +24,54 @@ export default {
     }
   },
   methods: {
-    handlelogin () {
-      this.$http
-        .post(`login`, this.formdata)
-        .then((res) => {
-          console.log(res)
-          const {
-            data: {
-              data,
-              meta: {msg, status}
-            }
-          } = res
-          if (status === 200) {
-            console.log('login--success')
-          } else {
-            console.log('login--error')
-          }
+    async handlelogin () {
+      // this.$http
+      //   .post(`login`, this.formdata)
+      //   .then((res) => {
+      //     console.log(res)
+      //     const {
+      //       data: {
+      //         data,
+      //         meta: {msg, status}
+      //       }
+      //     } = res
+      //     if (status === 200) {
+      //       // console.log('login--success')
+      //       this.$router.push({
+      //         name: 'home'
+      //       })
+      //     } else {
+      //       // console.log('login--error')
+      //       console.log(msg)
+      //       this.$message.error(msg)
+      //     }
+      //   })
+      //   .catch(err => {
+      //     console.log(err)
+      //   })
+      const res = await this.$http.post(`login`, this.formdata)
+      // console.log(res)
+      const {
+        data: {
+          // data,
+          // token: {token},
+          data: {token},
+          meta: {msg, status}
+        }
+      } = res
+      // console.log(data)
+      // console.log(msg)
+      // console.log(status)
+      if (status === 200) {
+        localStorage.setItem('token', token)
+        // console.log(token)
+        // localStorage.getItem('token')
+        this.$router.push({
+          name: 'home'
         })
-        .catch(err => {
-          console.log(err)
-        })
+      } else {
+        this.$message.error(msg)
+      }
     }
   }
 }

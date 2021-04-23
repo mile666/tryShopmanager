@@ -2737,6 +2737,23 @@
               git push
               )
       ③.分类参数
+总结：
+  数据库：mysql，
+  后端：node写好的(现成的)
+        在写好的后台文件api-server文件中的config文件(配置文件)中的default.json文件的内容中的db_config对象里面的内容，即配置数据库信息修改，启动node后台服务器(node app.js)
+  版本控制：github
+  创建项目结构：vue-cli版本2
+    创建项目语句：vue init webpack 项目名   (注意：项目名不能是关键字)
+  项目的启动语句：npm run dev
+  插件：
+    element-ui：网站快速成型工具
+      form表单
+      message消息提示
+    axios：查看接口文档中的登录-登录验证接口，发送请求
+  相关知识点：
+    localStorage.setItem('token', token)
+    localStorage.getItem('token')
+end
 
 
 
