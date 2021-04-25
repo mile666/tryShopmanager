@@ -589,7 +589,7 @@
                 选项1
               </el-menu-item>
             </el-submenu>
-        复制多分用户管理并修改标签内容，
+        复制多分用户管理并修改标签内容，复制上面代码，共5段el-submenu标签
         a.问题：点击第一个时同时打开，
           解决：同时修改el-submenu标签中index的值：用户管理为1，权限管理为2，商品管理为3，订单管理为4，数据统计为5;
         b.问题：点击第二个，第一个不会关闭，
@@ -605,7 +605,7 @@
           if(没有token){改Login,显示login.vue}
           代码位置 -> 在渲染home.vue之前  home.vue渲染完毕时 -> mounted()
           beforeMount(){?}
-        在export default{}中添加beforeMount方法如下：
+        在home.vue中的export default{}中添加beforeMount方法如下：
             export default {
               beforeMount () {
                 // console.log('beforMount------')
