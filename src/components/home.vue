@@ -26,7 +26,7 @@
                 <i class="el-icon-location"></i>
                 <span>用户管理</span>
               </template>
-              <el-menu-item index="1-1">
+              <el-menu-item index="users">
                 <i class="el-icon-menu"></i>
                 选项1
               </el-menu-item>
@@ -73,7 +73,9 @@
             </el-submenu>
           </el-menu>
         </el-aside>
-        <el-main class="aside">Main</el-main>
+        <el-main class="aside">
+          <router-view></router-view>
+        </el-main>
       </el-container>
     </el-container>
   </div>
