@@ -2747,8 +2747,11 @@
   项目的启动语句：npm run dev
   插件：
     element-ui：网站快速成型工具
-      form表单
-      message消息提示
+      form 表单
+      message 消息提示
+      Table 表格
+      Switch 开关
+      Button 按钮
     axios：查看接口文档中的登录-登录验证接口，发送请求
     moment:日期处理插件
   相关知识点：
