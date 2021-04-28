@@ -13,7 +13,7 @@
         <el-input clearable placeholder="请输入内容" v-model="query" class="searchInput" @clear="getAllUsers()">
           <el-button @click="searchUser()" slot="append" icon="el-icon-search"></el-button>
         </el-input>
-        <el-button type="primary">添加用户</el-button>
+        <el-button type="primary" @click="showDiaAddUser()">添加用户</el-button>
       </el-col>
     </el-row>
     <!-- 表格 -->
@@ -49,6 +49,27 @@
       layout="total, sizes, prev, pager, next, jumper"
       :total="total">
     </el-pagination>
+    <!-- 表单弹框-Dialog对话框 -->
+    <el-dialog title="收货地址" :visible.sync="dialogFormVisibleAdd">
+      <el-form label-position="left" label-width="80px" :model="formdata">
+        <el-form-item label="用户名">
+          <el-input v-model="formdata.username"></el-input>
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="formdata.password"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="formdata.email"></el-input>
+        </el-form-item>
+        <el-form-item label="电话">
+          <el-input v-model="formdata.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleAdd = false">取 消</el-button>
+        <el-button type="primary" @click="dialogFormVisibleAdd = false">确 定</el-button>
+      </div>
+    </el-dialog>
   </el-card>
 </template>
 
@@ -79,13 +100,24 @@ export default {
       //   name: '王小虎',
       //   address: '上海市普陀区金沙江路 1516 弄'
       // }]
-      list: []
+      list: [],
+      dialogFormVisibleAdd: false,
+      formdata: {
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
+      }
     }
   },
   created () {
     this.getTableData()
   },
   methods: {
+    // 添加用户-显示对话框
+    showDiaAddUser () {
+      this.dialogFormVisibleAdd = true
+    },
     // 清空后搜索全部用户
     getAllUsers () {
       this.getTableData()
