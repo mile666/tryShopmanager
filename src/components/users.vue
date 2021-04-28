@@ -10,10 +10,10 @@
     <!-- 搜索 -->
     <el-row class="searchBox">
       <el-col>
-        <el-input placeholder="请输入内容" v-model="query" class="searchInput">
-          <el-button slot="append" icon="el-icon-search"></el-button>
-          <el-button type="primary">添加用户</el-button>
+        <el-input clearable placeholder="请输入内容" v-model="query" class="searchInput" @clear="getAllUsers()">
+          <el-button @click="searchUser()" slot="append" icon="el-icon-search"></el-button>
         </el-input>
+        <el-button type="primary">添加用户</el-button>
       </el-col>
     </el-row>
     <!-- 表格 -->
@@ -86,6 +86,15 @@ export default {
     this.getTableData()
   },
   methods: {
+    // 清空后搜索全部用户
+    getAllUsers () {
+      this.getTableData()
+    },
+    // 搜索按钮
+    searchUser () {
+      this.pagenum = 1
+      this.getTableData()
+    },
     // 分页相关方法
     // 每页显示的数据数量
     handleSizeChange (val) {

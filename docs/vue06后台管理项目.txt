@@ -985,7 +985,7 @@
             git add .
             git commit -m "分页完成"
       ⑩+④.搜索用户
-          在users.vue中给搜索的el-button添加事件@click="searchUser()",在methods中添加searchUser，具体如下：
+          在users.vue中给搜索的el-button添加事件@click="searchUser()",在methods中handleSizeChange方法前面添加searchUser，具体如下：
               // 搜索用户
               searchUser () {
                 // 输入框组件 -> 在组件文本清空时 -> 做一些事儿
