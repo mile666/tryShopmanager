@@ -1165,6 +1165,7 @@
                 </div>
               </el-dialog>
           修改数据
+            修改el-dialog的:visible.sync值为dialogFormVisibleEdit及title的为编辑用户;修改el-button取消按钮的点击事件为dialogFormVisibleEdit;修改el-button确定按钮的点击事件为editUser
             在data中dialogFormVisibleAdd后面添加:
                 dialogFormVisibleEdit: false,
             在methods中添加

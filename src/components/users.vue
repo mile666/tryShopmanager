@@ -34,7 +34,7 @@
       </el-table-column>
       <el-table-column label="操作" width="200">
         <template slot-scope="scope">
-          <el-button type="primary" icon="el-icon-edit" circle></el-button>
+          <el-button type="primary" icon="el-icon-edit" circle @click="showDiaEditUser(scope.row)"></el-button>
           <el-button type="danger" icon="el-icon-delete" circle @click="showMsgBox(scope.row)"></el-button>
           <el-button type="success" icon="el-icon-check" circle></el-button>
         </template>
@@ -70,6 +70,27 @@
         <el-button type="primary" @click="addUser()">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 编辑按钮-表单弹框-Dialog对话框 -->
+    <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEdit">
+      <el-form label-position="left" label-width="80px" :model="formdata">
+        <el-form-item label="用户名">
+          <el-input disabled v-model="formdata.username"></el-input>
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="formdata.password"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="formdata.email"></el-input>
+        </el-form-item>
+        <el-form-item label="电话">
+          <el-input v-model="formdata.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleEidt = false">取 消</el-button>
+        <el-button type="primary" @click="editUser()">确 定</el-button>
+      </div>
+    </el-dialog>
   </el-card>
 </template>
 
@@ -102,6 +123,7 @@ export default {
       // }]
       list: [],
       dialogFormVisibleAdd: false,
+      dialogFormVisibleEdit: false,
       formdata: {
         username: '',
         password: '',
@@ -114,6 +136,20 @@ export default {
     this.getTableData()
   },
   methods: {
+    // 编辑按钮-确定按钮-发送请求
+    async editUser () {
+      const res = await this.$http.put(`users/${this.formdata.id}`, this.formdata)
+      const {meta: {msg, status}} = res.data
+      if (status === 200) {
+        this.dialogFormVisibleEdit = false
+        this.getTableData()
+      }
+    },
+    // 编辑按钮-弹出表单对话框
+    showDiaEditUser (user) {
+      this.formdata = user
+      this.dialogFormVisibleEdit = true
+    },
     // 删除按钮-弹出确认框confirm
     showMsgBox (user) {
       this.$confirm('是否删除用户?', '提示', {
