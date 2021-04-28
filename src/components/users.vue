@@ -40,6 +40,15 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="pagenum"
+      :page-sizes="[2, 4, 6, 8]"
+      :page-size="2"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
   </el-card>
 </template>
 
@@ -48,8 +57,11 @@ export default {
   data () {
     return {
       query: '',
+      // pagenum=1 pagesize=2 -> 第一页，获取数据库中前两条数据
+      // pagenum=3 pagesize=3 -> 第三页，获取数据库中第 7/8/9 条数据
       pagenum: 1,
       pagesize: 2,
+      total: -1,
       // tableData: [{
       //   date: '2016-05-02',
       //   name: '王小虎',
@@ -74,6 +86,21 @@ export default {
     this.getTableData()
   },
   methods: {
+    // 分页相关方法
+    // 每页显示的数据数量
+    handleSizeChange (val) {
+      console.log(`每页 ${val} 条`)
+      this.pagenum = 1
+      this.pagesize = val
+      this.getTableData()
+    },
+    // 当前显示页码
+    handleCurrentChange (val) {
+      // console.log(`当前页: ${val}`)
+      this.pagenum = val
+      this.getTableData()
+    },
+    // 获取列表所有数据
     async getTableData () {
       // instance.defaults.headers.common['Authorization'] = AUTH_TOKEN
       const AUTH_TOKEN = localStorage.getItem('token')
@@ -84,9 +111,9 @@ export default {
       console.log(res)
       const {data, meta: {msg, status}} = res.data
       if (status === 200) {
+        this.total = data.total
         this.list = data.users
       }
-      console.log(data)
     }
   }
 }

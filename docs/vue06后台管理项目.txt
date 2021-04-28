@@ -2752,6 +2752,7 @@
       Table 表格
       Switch 开关
       Button 按钮
+      Pagination 分页
     axios：查看接口文档中的登录-登录验证接口，发送请求
     moment:日期处理插件
   相关知识点：
