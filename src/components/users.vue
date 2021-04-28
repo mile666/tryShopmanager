@@ -35,7 +35,7 @@
       <el-table-column label="操作" width="200">
         <template slot-scope="scope">
           <el-button type="primary" icon="el-icon-edit" circle></el-button>
-          <el-button type="danger" icon="el-icon-delete" circle></el-button>
+          <el-button type="danger" icon="el-icon-delete" circle @click="showMsgBox(scope.row)"></el-button>
           <el-button type="success" icon="el-icon-check" circle></el-button>
         </template>
       </el-table-column>
@@ -49,7 +49,7 @@
       layout="total, sizes, prev, pager, next, jumper"
       :total="total">
     </el-pagination>
-    <!-- 表单弹框-Dialog对话框 -->
+    <!-- 添加按钮-表单弹框-Dialog对话框 -->
     <el-dialog title="收货地址" :visible.sync="dialogFormVisibleAdd">
       <el-form label-position="left" label-width="80px" :model="formdata">
         <el-form-item label="用户名">
@@ -67,7 +67,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisibleAdd = false">取 消</el-button>
-        <el-button type="primary" @click="dialogFormVisibleAdd = false">确 定</el-button>
+        <el-button type="primary" @click="addUser()">确 定</el-button>
       </div>
     </el-dialog>
   </el-card>
@@ -114,8 +114,45 @@ export default {
     this.getTableData()
   },
   methods: {
+    // 删除按钮-弹出确认框confirm
+    showMsgBox (user) {
+      this.$confirm('是否删除用户?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        // this.$message({
+        //   type: 'success',
+        //   message: '删除成功!'
+        // })
+        // this.$message.success('删除成功！')
+        const res = await this.$http.delete(`users/${user.id}`)
+        // console.log(res)
+        const {meta: {msg, status}} = res.data
+        if (status === 200) {
+          this.$message.success(msg)
+          // 如果删除后，跳转到第一页并刷新别表
+          this.pagenum = 1
+          this.getTableData()
+        }
+      }).catch(() => {
+        // this.$message({
+        //   type: 'info',
+        //   message: '已取消删除'
+        // })
+        this.$message.info('已取消删除')
+      })
+    },
+    // 添加用户-确定按钮(发送请求)
+    async addUser () {
+      const res = await this.$http.post(`users`, this.formdata)
+      // console.log(res)
+      this.dialogFormVisibleAdd = false
+      this.getTableData()
+    },
     // 添加用户-显示对话框
     showDiaAddUser () {
+      this.formdata = {}
       this.dialogFormVisibleAdd = true
     },
     // 清空后搜索全部用户
@@ -149,7 +186,7 @@ export default {
       this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
       // console.log(this.$http.defaults)
       const res = await this.$http.get(`users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`)
-      console.log(res)
+      // console.log(res)
       const {data, meta: {msg, status}} = res.data
       if (status === 200) {
         this.total = data.total
