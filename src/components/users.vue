@@ -29,14 +29,14 @@
       </el-table-column>
       <el-table-column label="用户状态" width="120">
         <template slot-scope="scope">
-          <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+          <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949" @change="changeState(scope.row)"></el-switch>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="200">
         <template slot-scope="scope">
           <el-button type="primary" icon="el-icon-edit" circle @click="showDiaEditUser(scope.row)"></el-button>
           <el-button type="danger" icon="el-icon-delete" circle @click="showMsgBox(scope.row)"></el-button>
-          <el-button type="success" icon="el-icon-check" circle></el-button>
+          <el-button type="success" icon="el-icon-check" circle @click="showDiaSetRole(scope.row)"></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -91,6 +91,24 @@
         <el-button type="primary" @click="editUser()">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 分配角色(即：√)-表单弹框-Dialog对话框 -->
+    <el-dialog title="分配角色" :visible.sync="dialogFormVisibleRole">
+      <el-form label-position="left" label-width="80px" :model="formdata">
+        <el-form-item label="用户名">
+          {{formdata.username}}
+        </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="selectVal" placeholder="请选择角色名称">
+            <el-option label="请选择" value="shanghai"></el-option>
+            <el-option label="区域二" value="beijing"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleRole = false">取 消</el-button>
+        <el-button type="primary" @click="dialogFormVisibleRole = false">确 定</el-button>
+      </div>
+    </el-dialog>
   </el-card>
 </template>
 
@@ -124,18 +142,33 @@ export default {
       list: [],
       dialogFormVisibleAdd: false,
       dialogFormVisibleEdit: false,
+      dialogFormVisibleRole: false,
       formdata: {
         username: '',
         password: '',
         email: '',
-        mobile: ''
-      }
+        mobile: '',
+      },
+      selectVal: 1
     }
   },
   created () {
     this.getTableData()
   },
   methods: {
+    // 分配角色('对勾')
+    showDiaSetRole () {
+      this.dialogFormVisibleRole = true
+    },
+    // 修改用户状态
+    async changeState (user) {
+      const res = await this.$http.put(`users/${user.id}/state/${user.mg_state}`)
+      console.log(res)
+      const {meta: {status, msg}} = res.data
+      if (status === 200) {
+        this.$message.success(msg)
+      }
+    },
     // 编辑按钮-确定按钮-发送请求
     async editUser () {
       const res = await this.$http.put(`users/${this.formdata.id}`, this.formdata)
