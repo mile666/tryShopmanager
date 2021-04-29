@@ -98,9 +98,10 @@
           {{formdata.username}}
         </el-form-item>
         <el-form-item label="角色">
+          {{selectVal}}
           <el-select v-model="selectVal" placeholder="请选择角色名称">
-            <el-option label="请选择" value="shanghai"></el-option>
-            <el-option label="区域二" value="beijing"></el-option>
+            <el-option label="请选择" value="-1"></el-option>
+            <el-option :label="item.roleName" :value="item.id" v-for="(item, i) in roles" :key="item.id"></el-option>
           </el-select>
         </el-form-item>
       </el-form>
@@ -147,18 +148,27 @@ export default {
         username: '',
         password: '',
         email: '',
-        mobile: '',
+        mobile: ''
       },
-      selectVal: 1
+      selectVal: -1,
+      roles: []
     }
   },
   created () {
     this.getTableData()
   },
   methods: {
-    // 分配角色('对勾')
-    showDiaSetRole () {
+    // 分配角色('对勾')-弹出表单对话框
+    async showDiaSetRole (user) {
+      this.formdata = user
       this.dialogFormVisibleRole = true
+      const res = await this.$http.get(`roles`)
+      const {meta: {msg, status}, data} = res.data
+      // console.log(res.data)
+      if (status === 200) {
+        this.roles = data
+        // console.log(this.roles)
+      }
     },
     // 修改用户状态
     async changeState (user) {
